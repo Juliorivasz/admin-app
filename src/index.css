@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* Lo que sucede es que Tailwind CSS v4 lanzó su nueva sintaxis @theme 
+hace muy poco tiempo, y el validador estándar de CSS de VS Code simplemente 
+aún no tiene registrado ese comando en su diccionario de reglas CSS globales */
+@theme {
+  --color-bg: #0f1117;
+  --color-surface: #1a1d2e;
+  --color-surface-2: #22263a;
+  --color-border: #2e3250;
+  --color-primary: #6c63ff;
+  --color-primary-hover: #5a52e0;
+  --color-danger: #ef4444;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+}
+
+@layer base {
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', system-ui, sans-serif;
+    margin: 0;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+
+  /* Ocultar flechas (spinners) en inputs tipo número (Chrome, Safari, Edge, Opera) */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Ocultar flechas en inputs tipo número (Firefox) */
+  input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
