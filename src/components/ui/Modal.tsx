@@ -7,7 +7,7 @@ interface ModalProps {
   children: ReactNode;
   headerActions?: ReactNode;
   /**
-   * Tamaño del modal. Por defecto 'md'.
+   * Tamaño del modal.
    * - 'sm'  → max-w-md  (~448px)
    * - 'md'  → max-w-lg  (~512px)  ← default
    * - 'lg'  → max-w-2xl (~672px)
@@ -28,6 +28,17 @@ const SIZE_CLASSES = {
   xl: 'max-w-4xl',
 };
 
+/**
+ * Modal — Midnight Fleet design system
+ *
+ * Surfaces (DESIGN.md):
+ *   bg: #1A1D2E (Level 1 surface)
+ *   border: 1px solid #2E3250
+ *   radius: 12px (standalone card)
+ *
+ * Mobile: sheet anchored bottom, rounded-top-2xl, 90dvh max
+ * Desktop: centered dialog, rounded-2xl
+ */
 const Modal = ({
   isOpen,
   onClose,
@@ -47,43 +58,30 @@ const Modal = ({
         onClick={onClose}
       />
 
-      {/*
-        Comportamiento responsive:
-
-        MOBILE  (< sm):
-          - Ocupa el 90% del alto de pantalla, anclado al fondo (items-end).
-          - Body con overflow-y-auto → scroll permitido.
-          - rounded solo arriba.
-
-        DESKTOP (sm+):
-          - Sin max-h → el modal tiene la altura exacta de su contenido.
-          - Sin overflow-y-auto → nunca hay scroll.
-          - Centrado vertical/horizontal.
-          - rounded completo.
-      */}
+      {/* Modal panel — Level 1 surface, 12px radius, 1px border */}
       <div
         className={`
           relative w-full ${SIZE_CLASSES[size]}
           flex flex-col
           bg-surface border border-border
-          shadow-2xl
+          shadow-2xl shadow-black/50
           animate-in fade-in duration-200
 
-          rounded-t-2xl        sm:rounded-2xl
-          max-h-[90dvh]        sm:max-h-none
+          rounded-t-xl        sm:rounded-xl
+          max-h-[90dvh]       sm:max-h-none
           overflow-hidden
         `}
       >
         {/* ── Header ── */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border shrink-0">
-          <h3 className="text-lg font-semibold leading-6 text-text truncate pr-4">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+          <h3 className="text-base font-semibold leading-6 text-text truncate pr-4">
             {title}
           </h3>
           <div className="flex items-center gap-2 shrink-0">
             {headerActions && <div className="flex items-center">{headerActions}</div>}
             <button
               onClick={onClose}
-              className="rounded-full p-1.5 text-text-muted hover:bg-surface-2 hover:text-text transition-colors"
+              className="rounded-full p-1.5 text-text-muted hover:bg-surface-2 hover:text-text transition-colors duration-200"
               aria-label="Cerrar modal"
             >
               <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -93,17 +91,14 @@ const Modal = ({
           </div>
         </div>
 
-        {/* ── Body ──
-            Mobile:  overflow-y-auto  → scroll si el contenido no cabe
-            Desktop: overflow-visible → nunca hace scroll (el modal crece hasta el contenido)
-        */}
+        {/* ── Body ── */}
         <div className="flex-1 overflow-y-auto sm:overflow-visible px-5 py-4">
           {children}
         </div>
 
         {/* ── Footer ── */}
         {footer && (
-          <div className="px-5 py-3.5 border-t border-border bg-surface shrink-0">
+          <div className="px-5 py-4 border-t border-border bg-surface shrink-0">
             {footer}
           </div>
         )}

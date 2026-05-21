@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProductos, createProducto, updateProducto, toggleEstadoProducto } from '../services/productoService';
 import { DataTable } from '../components/ui/DataTable';
-import { Toggle } from '../components/ui/Toggle';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import PageHeader from '../components/ui/PageHeader';
 import FilterBar from '../components/ui/FilterBar';
@@ -11,6 +10,19 @@ import StatusBadge from '../components/ui/StatusBadge';
 import StockBadge from '../components/ui/StockBadge';
 import ProductoFormModal from '../components/producto/ProductoFormModal';
 import type { ColumnDef } from '@tanstack/react-table';
+
+
+/**
+ * Función helper para derivar la variante del StatusBadge.
+ */
+function getProductoStatusVariant(row: any): 'dado-de-baja' | 'agotado' | 'stock-bajo' | 'disponible' {
+  if (row.deleted_at)            return 'dado-de-baja';
+  if (row.stock_cantidad === 0)  return 'agotado';
+  if (row.stock_cantidad <= 5)   return 'stock-bajo';
+  return 'disponible';
+}
+
+// Helper de iconos removido según indicación de usar imágenes reales en su lugar.
 
 const ProductosPage = () => {
   const queryClient = useQueryClient();
@@ -63,14 +75,47 @@ const ProductosPage = () => {
   // ── Columnas de tabla ────────────────────────────────────────────────
   const columns = useMemo<ColumnDef<any, any>[]>(() => [
     {
+      id: 'imagen',
+      header: 'Imagen',
+      cell: (info) => {
+        // En una app real, aquí usaríamos info.row.original.imagen_url
+        // Por ahora simulamos si tiene imagen o es el placeholder gris
+        const nombre = info.row.original.nombre.toLowerCase();
+        const hasImage = nombre.includes('pizza') || nombre.includes('hamburguesa');
+        
+        return (
+          <div className="w-10 h-10 rounded-md overflow-hidden bg-surface-2 border border-border flex items-center justify-center shrink-0">
+            {hasImage ? (
+              <img 
+                src={`https://api.dicebear.com/7.x/shapes/svg?seed=${nombre}&backgroundColor=1D1E2C`} 
+                alt={info.row.original.nombre} 
+                className="w-full h-full object-cover opacity-80"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full bg-[#252636]" />
+            )}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: 'nombre',
       header: 'Producto',
-      cell: (info) => <span className="font-semibold text-text">{info.getValue<string>()}</span>,
+      cell: (info) => (
+        <span className="font-medium text-text text-[14px]">
+          {info.getValue<string>()}
+        </span>
+      ),
     },
     {
       accessorKey: 'precio_base',
       header: 'Precio Base',
-      cell: (info) => <span className="text-primary font-bold">${info.getValue<number>().toFixed(2)}</span>,
+      cell: (info) => (
+        <span className="text-text text-[14px]">
+          ${info.getValue<number>().toFixed(2)}
+        </span>
+      ),
     },
     {
       accessorKey: 'stock_cantidad',
@@ -80,9 +125,9 @@ const ProductosPage = () => {
     {
       id: 'estado',
       header: 'Estado',
-      cell: ({ row }) => row.original.deleted_at
-        ? <StatusBadge variant="dado-de-baja" />
-        : <StatusBadge variant={row.original.disponible ? 'disponible' : 'no-disponible'} />,
+      cell: ({ row }) => (
+        <StatusBadge variant={getProductoStatusVariant(row.original)} />
+      ),
     },
   ], []);
 
@@ -92,7 +137,6 @@ const ProductosPage = () => {
     setModalMode('create');
   };
 
-  // ── Submit unificado: create o update, con categorías e ingredientes ──
   const handleSubmit = async (values: any) => {
     if (modalMode === 'edit' && selectedItem) {
       await updateMutation.mutateAsync({ id: selectedItem.id, data: values });
@@ -104,42 +148,64 @@ const ProductosPage = () => {
 
   return (
     <div className="space-y-6">
+      {/* ── Page Header ── */}
       <PageHeader
         title="Productos"
-        subtitle="Gestión del menú final"
+        subtitle="Administración del catálogo, precios y disponibilidad"
         onNew={() => { setSelectedItem(null); setModalMode('create'); setIsModalOpen(true); }}
         newLabel="Nuevo Producto"
-        newClassName="bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600 border-0"
       />
 
+      {/* ── Filter Bar ── */}
       <FilterBar
         search={searchText}
         onSearchChange={setSearchText}
+        placeholder="Buscar por nombre..."
         hasActiveFilters={searchText !== '' || showInactivos || precioMin !== '' || precioMax !== ''}
         onClear={() => { setSearchText(''); setShowInactivos(false); setPrecioMin(''); setPrecioMax(''); }}
       >
+        {/* Filtros de Precio: $ Mín — $ Máx */}
         <div className="flex items-center gap-2">
-          <input type="number" placeholder="$ Mín" value={precioMin} onChange={(e) => setPrecioMin(e.target.value)}
-            className="w-20 px-3 py-2.5 rounded-xl bg-surface-2 border border-border text-text text-sm placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-          <span className="text-text-muted text-xs">—</span>
-          <input type="number" placeholder="$ Máx" value={precioMax} onChange={(e) => setPrecioMax(e.target.value)}
-            className="w-20 px-3 py-2.5 rounded-xl bg-surface-2 border border-border text-text text-sm placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[13px] pointer-events-none">
+              $
+            </span>
+            <input
+              type="number"
+              placeholder="Mín"
+              value={precioMin}
+              onChange={(e) => setPrecioMin(e.target.value)}
+              className="w-20 bg-[#1D1E2C] border border-[#2A2B3D] rounded-xl text-[14px] text-text placeholder:text-text-muted/60 pl-7 pr-3 py-[9px] hover:border-text-muted/40 focus:outline-none focus:border-primary transition-colors"
+            />
+          </div>
+          <span className="text-text-muted font-light px-1">—</span>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[13px] pointer-events-none">
+              $
+            </span>
+            <input
+              type="number"
+              placeholder="Máx"
+              value={precioMax}
+              onChange={(e) => setPrecioMax(e.target.value)}
+              className="w-20 bg-[#1D1E2C] border border-[#2A2B3D] rounded-xl text-[14px] text-text placeholder:text-text-muted/60 pl-7 pr-3 py-[9px] hover:border-text-muted/40 focus:outline-none focus:border-primary transition-colors"
+            />
+          </div>
         </div>
-        <Toggle size="sm" label="Mostrar inactivos" checked={showInactivos} onChange={setShowInactivos} />
       </FilterBar>
 
+      {/* ── Products Table ── */}
       <QueryStateWrapper isLoading={isLoading} isError={isError} errorMsg="Error al cargar los productos.">
         <DataTable
           columns={columns}
           data={filteredData}
+          itemLabel="productos"
           onRowClick={(row) => { setSelectedItem(row); setModalMode('view'); setIsModalOpen(true); }}
           rowClassName={(row: any) => row.deleted_at ? 'opacity-50' : ''}
         />
       </QueryStateWrapper>
 
-      {/* Modal de Producto con wizard de 3 pasos.
-          key={selectedItem?.id ?? 'create'} → fuerza remount cuando cambia el producto,
-          garantizando que el estado interno del form se reinicializa con los datos correctos. */}
+      {/* ── Modals ── */}
       <ProductoFormModal
         key={selectedItem?.id ?? 'create'}
         isOpen={isModalOpen}
@@ -159,22 +225,6 @@ const ProductosPage = () => {
         onEnableEdit={() => setModalMode('edit')}
         onSubmit={handleSubmit}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
-        headerActions={selectedItem && modalMode === 'view' ? (
-          <div className="flex items-center gap-2 border-l border-border pl-3 ml-1">
-            <Toggle
-              size="sm"
-              label={selectedItem.deleted_at ? 'Inactivo' : 'Activo'}
-              checked={!selectedItem.deleted_at}
-              onChange={() => {
-                if (!selectedItem.deleted_at) setProductoToToggle(selectedItem);
-                else {
-                  toggleEstadoMutation.mutate(selectedItem.id);
-                  setSelectedItem({ ...selectedItem, deleted_at: null, disponible: true });
-                }
-              }}
-            />
-          </div>
-        ) : null}
       />
 
       <ConfirmModal

@@ -63,8 +63,8 @@ const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
 
   if (data.length === 0) {
     return (
-      <div className="w-full rounded-2xl border border-border bg-surface flex flex-col items-center justify-center py-16 text-text-muted">
-        <p>No se encontraron categorías.</p>
+      <div className="w-full rounded-xl border border-border bg-surface flex flex-col items-center justify-center py-16">
+        <p className="text-text-muted font-normal" style={{ fontSize: '14px' }}>No se encontraron categorías.</p>
       </div>
     );
   }
@@ -80,7 +80,7 @@ const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
         {/* Fila del nodo */}
         <div
           onClick={() => onRowClick(node.item)}
-          className={`group flex items-center justify-between p-4 border-b border-border/50 hover:bg-surface-2 transition-colors cursor-pointer ${isInactive ? 'opacity-60' : ''}`}
+          className={`group flex items-center justify-between p-4 border-b border-border/50 hover:bg-surface-2/60 transition-all duration-200 cursor-pointer ${isInactive ? 'opacity-50' : ''}`}
           style={{ paddingLeft: `${Math.max(1, node.depth * 2)}rem` }}
         >
           {/* Lado izquierdo: Nombre y Flecha */}
@@ -137,16 +137,16 @@ const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
   };
 
   return (
-    <div className="w-full bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
-      {/* Header de la tabla (Solo Desktop) */}
-      <div className="hidden sm:flex items-center p-4 border-b border-border bg-surface-2/30 text-xs font-bold text-text-muted uppercase tracking-wider">
+    <div className="w-full bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
+      {/* Header de la tabla — label-md uppercase (Solo Desktop) */}
+      <div className="hidden sm:flex items-center px-4 py-3 border-b border-border bg-surface-2 text-text-muted font-medium uppercase tracking-wider" style={{ fontSize: '12px' }}>
         <div className="flex-1 px-8">Nombre de Categoría</div>
         <div className="flex-1 px-4">Descripción</div>
         <div className="w-24 text-right pr-4">Estado</div>
       </div>
 
       {/* Cuerpo del Árbol */}
-      <div className="flex flex-col divide-y divide-border/50">
+      <div className="flex flex-col divide-y divide-border/60">
         {tree.map(renderNode)}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, ListFilter } from 'lucide-react';
 
 interface FilterBarProps {
   search: string;
@@ -7,9 +7,19 @@ interface FilterBarProps {
   placeholder?: string;
   hasActiveFilters: boolean;
   onClear: () => void;
-  children?: ReactNode; // slot para filtros adicionales
+  children?: ReactNode;
 }
 
+/**
+ * FilterBar
+ * ═══════════════════════════════════════════════════
+ * Estilos según la imagen:
+ * - Ya no está dentro de una tarjeta (`bg-surface`), los inputs flotan 
+ *   directamente sobre el fondo principal.
+ * - Input de búsqueda: Fondo oscuro (`bg-surface-2`, #252636), borde sutil.
+ * - Botón Filtrar: Mismo estilo que los inputs (borde sutil, texto blanco).
+ * ═══════════════════════════════════════════════════
+ */
 const FilterBar = ({
   search,
   onSearchChange,
@@ -18,26 +28,39 @@ const FilterBar = ({
   onClear,
   children,
 }: FilterBarProps) => (
-  <div className="flex flex-wrap items-center gap-4 bg-surface p-4 rounded-2xl border border-border shadow-sm">
-    <div className="relative flex-1 min-w-[200px]">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+  <div className="flex flex-wrap items-center gap-3 w-full">
+    {/* ── Campo de búsqueda ── */}
+    <div className="relative flex-1 min-w-[240px] max-w-md">
+      <Search
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-text-muted pointer-events-none"
+        strokeWidth={1.8}
+      />
       <input
         type="text"
         placeholder={placeholder}
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-2 border border-border text-text text-sm placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+        className="w-full bg-[#1D1E2C] border border-[#2A2B3D] rounded-xl text-[14px] text-text placeholder:text-text-muted/60 pl-10 pr-4 py-[9px] hover:border-text-muted/40 focus:outline-none focus:border-primary transition-colors"
       />
     </div>
 
+    {/* ── Filtros adicionales inyectados desde la página (Precio) ── */}
     {children}
 
+    {/* ── Botón Filtrar (Visual, estático según imagen) ── */}
+    <button className="flex items-center gap-2 px-4 py-[9px] bg-[#1D1E2C] border border-[#2A2B3D] rounded-xl text-[14px] font-medium text-text hover:bg-surface-2 transition-colors">
+      <ListFilter className="w-4 h-4" strokeWidth={2} />
+      Filtrar
+    </button>
+
+    {/* ── Botón "Limpiar filtros" (Opcional si hay filtros activos) ── */}
     {hasActiveFilters && (
       <button
         onClick={onClear}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-muted hover:text-danger hover:bg-danger/10 border border-border transition-all"
+        className="flex items-center gap-1.5 text-[13px] font-medium text-text-muted hover:text-danger hover:bg-danger/10 px-3 py-2 rounded-lg transition-colors ml-auto"
       >
-        <X className="w-3.5 h-3.5" /> Limpiar
+        <X className="w-4 h-4" strokeWidth={2} />
+        Limpiar
       </button>
     )}
   </div>

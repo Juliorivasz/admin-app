@@ -1,7 +1,16 @@
+/**
+ * PageHeader
+ * ═══════════════════════════════════════════════════
+ * Estilos según la imagen:
+ * - Contenedor: Tarjeta oscura (`bg-surface`, #1D1E2C) con bordes suaves (`rounded-lg`).
+ * - Sin gradientes, texto en blanco (`text-text`).
+ * - Subtítulo en gris claro (`text-text-muted`).
+ * ═══════════════════════════════════════════════════
+ */
+
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
-  gradient?: string;
   onNew?: () => void;
   newLabel?: string;
   newClassName?: string;
@@ -10,24 +19,29 @@ interface PageHeaderProps {
 const PageHeader = ({
   title,
   subtitle,
-  gradient = 'from-primary to-blue-400',
   onNew,
   newLabel = 'Nuevo',
   newClassName = '',
 }: PageHeaderProps) => (
-  <div className="flex justify-between items-center bg-surface p-6 rounded-2xl border border-border shadow-sm">
-    <div>
-      <h1 className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+  <div className="flex justify-between items-center bg-surface rounded-xl p-6 border border-border">
+    <div className="flex flex-col gap-1">
+      <h1 className="text-[22px] font-semibold text-text tracking-tight">
         {title}
       </h1>
-      {subtitle && <p className="text-text-muted mt-1">{subtitle}</p>}
+      {subtitle && (
+        <p className="text-[14px] text-text-muted font-normal">
+          {subtitle}
+        </p>
+      )}
     </div>
+
     {onNew && (
       <button
         onClick={onNew}
-        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all shadow-sm ${newClassName}`}
+        className={`ds-btn bg-primary text-white hover:bg-primary-hover ${newClassName}`}
       >
-        <span className="text-lg leading-none">+</span> {newLabel}
+        <span className="text-[18px] leading-none mb-[2px]">+</span>
+        {newLabel}
       </button>
     )}
   </div>

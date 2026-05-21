@@ -1,24 +1,119 @@
+/**
+ * StatusBadge
+ * ═══════════════════════════════════════════════════
+ * Estilos según la imagen:
+ * - Disponible: Verde (#2EAE6D).
+ * - Stock Bajo: Naranja/Rojo suave (#E07A5F).
+ * - Agotado: Gris (#8A8F9E).
+ * - Forma: Pill (`rounded-md` o ligeramente redondeado, no full pill).
+ * - Contiene un pequeño punto (dot) de color sólido.
+ * ═══════════════════════════════════════════════════
+ */
+
 type StatusVariant =
   | 'activo'
   | 'inactivo'
   | 'disponible'
   | 'no-disponible'
+  | 'stock-bajo'
+  | 'agotado'
   | 'dado-de-baja'
   | 'alergeno'
   | 'no-alergeno'
   | 'removible'
-  | 'principal';
+  | 'principal'
+  | 'pedido-pendiente'
+  | 'pedido-preparacion'
+  | 'pedido-listo'
+  | 'pedido-entregado';
 
-const VARIANTS: Record<StatusVariant, { label: string; className: string }> = {
-  'activo':        { label: 'Activo',        className: 'bg-success/10 text-success border-success/20' },
-  'inactivo':      { label: 'Inactivo',      className: 'bg-danger/10 text-danger border-danger/20' },
-  'disponible':    { label: '🟢 Disponible', className: 'bg-success/10 text-success border-success/20' },
-  'no-disponible': { label: '⚫ No Disponible', className: 'bg-surface-2 text-text-muted border-border' },
-  'dado-de-baja':  { label: 'Dado de Baja',  className: 'bg-danger/10 text-danger border-danger/20' },
-  'alergeno':      { label: '⚠️ Alérgeno',   className: 'bg-warning/10 text-warning border-warning/20' },
-  'no-alergeno':   { label: 'No',            className: 'bg-surface-2 text-text-muted border-border' },
-  'removible':     { label: 'Removible',     className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  'principal':     { label: '★ Principal',   className: 'bg-primary/10 text-primary border-primary/20' },
+interface VariantConfig {
+  label: string;
+  badge: string;
+  dot?: string;
+}
+
+const VARIANTS: Record<StatusVariant, VariantConfig> = {
+  /* ─── Variantes de Productos (Según Imagen) ────────────────────── */
+  'disponible': {
+    label: 'Disponible',
+    badge: 'bg-[rgba(46,174,109,0.1)] text-[#2EAE6D] border-[rgba(46,174,109,0.2)]',
+    dot:   'bg-[#2EAE6D]',
+  },
+  'stock-bajo': {
+    label: 'Stock Bajo',
+    badge: 'bg-[rgba(224,122,95,0.1)] text-[#E07A5F] border-[rgba(224,122,95,0.2)]',
+    dot:   'bg-[#E07A5F]',
+  },
+  'agotado': {
+    label: 'Agotado',
+    badge: 'bg-[#252636] text-[#8A8F9E] border-[#2A2B3D]',
+    dot:   'bg-[#8A8F9E]',
+  },
+
+  /* ─── Variantes Generales (Ajustadas al nuevo tema) ───────────── */
+  'activo': {
+    label: 'Activo',
+    badge: 'bg-[rgba(46,174,109,0.1)] text-[#2EAE6D] border-[rgba(46,174,109,0.2)]',
+    dot:   'bg-[#2EAE6D]',
+  },
+  'inactivo': {
+    label: 'Inactivo',
+    badge: 'bg-[rgba(217,83,79,0.1)] text-[#D9534F] border-[rgba(217,83,79,0.2)]',
+    dot:   'bg-[#D9534F]',
+  },
+  'no-disponible': {
+    label: 'No Disponible',
+    badge: 'bg-[#252636] text-[#8A8F9E] border-[#2A2B3D]',
+    dot:   'bg-[#8A8F9E]',
+  },
+  'dado-de-baja': {
+    label: 'Dado de Baja',
+    badge: 'bg-[rgba(217,83,79,0.1)] text-[#D9534F] border-[rgba(217,83,79,0.2)]',
+    dot:   'bg-[#D9534F]',
+  },
+  'alergeno': {
+    label: '⚠️ Alérgeno',
+    badge: 'bg-[rgba(224,122,95,0.1)] text-[#E07A5F] border-[rgba(224,122,95,0.2)]',
+    dot:   undefined,
+  },
+  'no-alergeno': {
+    label: 'No',
+    badge: 'bg-[#252636] text-[#8A8F9E] border-[#2A2B3D]',
+    dot:   undefined,
+  },
+  'removible': {
+    label: 'Removible',
+    badge: 'bg-[rgba(113,93,242,0.1)] text-primary border-[rgba(113,93,242,0.2)]',
+    dot:   'bg-primary',
+  },
+  'principal': {
+    label: '★ Principal',
+    badge: 'bg-[rgba(113,93,242,0.1)] text-primary border-[rgba(113,93,242,0.2)]',
+    dot:   undefined,
+  },
+
+  /* ─── Variantes de Pedidos ────────────────────────────────────── */
+  'pedido-pendiente': {
+    label: 'PENDIENTE',
+    badge: 'bg-[rgba(224,122,95,0.1)] text-[#E07A5F] border-[rgba(224,122,95,0.2)]',
+    dot:   'bg-[#E07A5F]',
+  },
+  'pedido-preparacion': {
+    label: 'EN PREPARACIÓN',
+    badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    dot:   'bg-blue-400',
+  },
+  'pedido-listo': {
+    label: 'LISTO',
+    badge: 'bg-[rgba(46,174,109,0.1)] text-[#2EAE6D] border-[rgba(46,174,109,0.2)]',
+    dot:   'bg-[#2EAE6D]',
+  },
+  'pedido-entregado': {
+    label: '✓ ENTREGADO',
+    badge: 'bg-transparent text-[#8A8F9E]',
+    dot:   undefined,
+  },
 };
 
 interface StatusBadgeProps {
@@ -27,9 +122,16 @@ interface StatusBadgeProps {
 }
 
 const StatusBadge = ({ variant, className = '' }: StatusBadgeProps) => {
-  const { label, className: variantClass } = VARIANTS[variant];
+  const { label, badge, dot } = VARIANTS[variant];
+
   return (
-    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${variantClass} ${className}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-[8px] py-[3px] rounded-md border font-medium whitespace-nowrap ${badge} ${className}`}
+      style={{ fontSize: '12px' }}
+    >
+      {dot && (
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+      )}
       {label}
     </span>
   );

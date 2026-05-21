@@ -87,8 +87,7 @@ const IngredientesPage = () => {
     <div className="space-y-6">
       <PageHeader
         title="Ingredientes"
-        subtitle="Catálogo de insumos del menú"
-        gradient="from-primary to-orange-400"
+        subtitle="Gestión de inventario y stock base"
         newClassName="bg-orange-500 hover:bg-orange-600"
         onNew={() => { setSelectedItem(null); setModalMode('create'); setIsModalOpen(true); }}
         newLabel="Nuevo Ingrediente"

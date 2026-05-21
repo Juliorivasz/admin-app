@@ -1,56 +1,142 @@
 @import "tailwindcss";
 
-/* Lo que sucede es que Tailwind CSS v4 lanzó su nueva sintaxis @theme 
-hace muy poco tiempo, y el validador estándar de CSS de VS Code simplemente 
-aún no tiene registrado ese comando en su diccionario de reglas CSS globales */
+/* ═══════════════════════════════════════════════════════════════════════
+   SISTEMA DE DISEÑO - ACTUALIZADO A LA IMAGEN PROPORCIONADA
+   ═══════════════════════════════════════════════════════════════════════
+
+   ┌─────────────────────────────────────────────────────────────────┐
+   │  GUÍA DE ESTILOS (Para replicar en otras páginas)               │
+   │  ─────────────────────────────────────────────────────────────  │
+   │                                                                  │
+   │  1. FONDOS Y SUPERFICIES (Niveles)                              │
+   │     - Nivel 0 (Fondo base): #12131A (Sidebar, Header, Main)     │
+   │       -> Clase: `bg-bg`                                         │
+   │     - Nivel 1 (Tarjetas): #1D1E2C (PageHeader, Contenedor Tabla)│
+   │       -> Clase: `bg-surface` o `.ds-card`                       │
+   │     - Nivel 2 (Inputs, Badges neutros, Headers tabla): #252636   │
+   │       -> Clase: `bg-surface-2` o `.ds-input`                    │
+   │                                                                  │
+   │  2. TEXTO                                                        │
+   │     - Principal (Blanco humo): #E2E8F0                          │
+   │       -> Clase: `text-text`                                     │
+   │     - Secundario/Muted (Gris claro): #8A8F9E                    │
+   │       -> Clase: `text-text-muted`                               │
+   │                                                                  │
+   │  3. BORDES                                                       │
+   │     - Separadores sutiles: #2A2B3D                              │
+   │       -> Clase: `border-border`                                 │
+   │                                                                  │
+   │  4. MARCA / PRIMARIO (Botones activos, Ítem seleccionado)       │
+   │     - Indigo Brillante: #715DF2                                 │
+   │       -> Clase: `bg-primary`, `text-primary`                    │
+   │                                                                  │
+   │  5. ESTADOS (Para StatusBadge)                                  │
+   │     - Disponible (Verde): `bg-success/10 text-success`          │
+   │     - Stock Bajo (Naranja): `bg-warning/10 text-warning`        │
+   │     - Agotado (Gris): `bg-surface-2 text-text-muted`            │
+   └─────────────────────────────────────────────────────────────────┘
+*/
+
 @theme {
-  --color-bg: #0f1117;
-  --color-surface: #1a1d2e;
-  --color-surface-2: #22263a;
-  --color-border: #2e3250;
-  --color-primary: #6c63ff;
-  --color-primary-hover: #5a52e0;
-  --color-danger: #ef4444;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-text: #e2e8f0;
-  --color-text-muted: #94a3b8;
+  /* Fondos */
+  --color-bg:        #12131A; /* Fondo oscuro base */
+  --color-surface:   #1D1E2C; /* Tarjetas y paneles */
+  --color-surface-2: #252636; /* Inputs, hover states, badges */
+
+  /* Bordes */
+  --color-border:    #2A2B3D; /* Líneas divisorias */
+
+  /* Colores de Marca */
+  --color-primary:       #715DF2; /* Morado/Indigo del sidebar activo */
+  --color-primary-hover: #5F4EE0;
+
+  /* Colores de Estado */
+  --color-success: #2EAE6D; /* Verde para Disponible */
+  --color-warning: #E07A5F; /* Naranja/Rojo suave para Stock Bajo */
+  --color-danger:  #D9534F; /* Rojo para alertas críticas */
+
+  /* Texto */
+  --color-text:         #E2E8F0; /* Texto principal */
+  --color-text-muted:   #8A8F9E; /* Texto secundario, iconos inactivos */
+
+  /* Tipografía */
+  --font-inter: 'Inter', system-ui, sans-serif;
+
+  /* Bordes Redondeados */
+  --radius-sm:      0.25rem;  /* 4px */
+  --radius-default: 0.5rem;   /* 8px */
+  --radius-md:      0.6rem;   /* ~10px para inputs y botones */
+  --radius-lg:      0.75rem;  /* 12px para tarjetas */
+  --radius-full:    9999px;   /* Pills */
 }
 
 @layer base {
-
-  * {
-    box-sizing: border-box;
-  }
-
   body {
     background-color: var(--color-bg);
     color: var(--color-text);
-    font-family: 'Inter', system-ui, sans-serif;
-    margin: 0;
+    font-family: var(--font-inter);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* ─── CLASES DE DISEÑO (Para reusar en cualquier componente) ─── */
+
+  /* Tipografía */
+  .ds-title {
+    font-size: 1.25rem; /* 20px */
+    font-weight: 600;
+    color: var(--color-text);
   }
 
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--color-surface);
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 3px;
+  .ds-subtitle {
+    font-size: 0.875rem; /* 14px */
+    color: var(--color-text-muted);
   }
 
-  /* Ocultar flechas (spinners) en inputs tipo número (Chrome, Safari, Edge, Opera) */
-  input::-webkit-outer-spin-button,
-  input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+  /* Tarjetas (Level 1) */
+  .ds-card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
   }
 
-  /* Ocultar flechas en inputs tipo número (Firefox) */
-  input[type=number] {
-    -moz-appearance: textfield;
-    appearance: textfield;
+  /* Inputs (Level 2) */
+  .ds-input {
+    background-color: var(--color-bg); /* En la imagen los inputs parecen tener el mismo fondo o muy similar al base */
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+  }
+  .ds-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  /* Botones Base */
+  .ds-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem; /* 14px */
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  /* Botón Secundario (Fondo oscuro, borde claro) */
+  .ds-btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+  .ds-btn-secondary:hover {
+    background-color: var(--color-surface-2);
   }
 }

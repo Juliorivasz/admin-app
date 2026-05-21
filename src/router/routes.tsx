@@ -14,10 +14,12 @@
  */
 import { lazy } from 'react';
 
-const CategoriasPage      = lazy(() => import('../pages/CategoriasPage'));
-const IngredientesPage    = lazy(() => import('../pages/IngredientesPage'));
-const ProductosPage       = lazy(() => import('../pages/ProductosPage'));
+const CategoriasPage = lazy(() => import('../pages/CategoriasPage'));
+const IngredientesPage = lazy(() => import('../pages/IngredientesPage'));
+const ProductosPage = lazy(() => import('../pages/ProductosPage'));
 const ProductoDetallePage = lazy(() => import('../pages/ProductoDetallePage'));
+const PedidosPage = lazy(() => import('../pages/PedidosPage'));
+
 // Páginas futuras (descomentar cuando existan):
 // const LoginPage        = lazy(() => import('../pages/LoginPage'));
 // const NotFoundPage     = lazy(() => import('../pages/NotFoundPage'));
@@ -70,6 +72,13 @@ export const privateRoutes: AppRoute[] = [
   {
     path: 'productos/:id',
     element: <ProductoDetallePage />,
+    withLayout: true,
+    requiresAuth: true,
+    roles: ['admin', 'manager', 'staff'],
+  },
+  {
+    path: 'pedidos',
+    element: <PedidosPage />,
     withLayout: true,
     requiresAuth: true,
     roles: ['admin', 'manager', 'staff'],

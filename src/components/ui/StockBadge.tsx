@@ -1,18 +1,26 @@
+/**
+ * StockBadge
+ * ═══════════════════════════════════════════════════
+ * Estilos según la imagen:
+ * - Todos los badges de stock tienen el mismo estilo visual (gris),
+ *   independientemente de la cantidad.
+ * - Fondo oscuro (`bg-surface-2`, #252636).
+ * - Texto atenuado (`text-text-muted`, #8A8F9E).
+ * - Borde muy tenue.
+ * ═══════════════════════════════════════════════════
+ */
+
 interface StockBadgeProps {
   cantidad: number;
   unidad?: string;
 }
 
 const StockBadge = ({ cantidad, unidad = 'uds' }: StockBadgeProps) => {
-  const alertClass =
-    cantidad === 0
-      ? 'bg-danger/10 text-danger border-danger/30'
-      : cantidad <= 5
-        ? 'bg-warning/10 text-warning border-warning/30'
-        : 'bg-surface-2 text-text border-border';
-
   return (
-    <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${alertClass}`}>
+    <span
+      className="inline-flex items-center px-[10px] py-[2px] rounded-md border border-border bg-[#252636] text-text-muted font-medium whitespace-nowrap"
+      style={{ fontSize: '12px' }}
+    >
       {cantidad} {unidad}
     </span>
   );
