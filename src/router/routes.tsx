@@ -20,11 +20,12 @@ const ProductosPage = lazy(() => import('../pages/ProductosPage'));
 const ProductoDetallePage = lazy(() => import('../pages/ProductoDetallePage'));
 const PedidosPage = lazy(() => import('../pages/PedidosPage'));
 
-// Páginas futuras (descomentar cuando existan):
-// const LoginPage        = lazy(() => import('../pages/LoginPage'));
+const DashboardPage = lazy(() => import('../pages/DashboardPage'));
+const UsuariosPage = lazy(() => import('../pages/UsuariosPage'));
+const LoginPage = lazy(() => import('../pages/LoginPage'));
 // const NotFoundPage     = lazy(() => import('../pages/NotFoundPage'));
 
-export type UserRole = 'admin' | 'manager' | 'staff';
+export type UserRole = 'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT';
 
 export interface AppRoute {
   path: string;
@@ -41,46 +42,59 @@ export interface AppRoute {
   redirectTo?: string;
 }
 
-/** Rutas públicas — accesibles sin autenticación */
 export const publicRoutes: AppRoute[] = [
-  // { path: '/login', element: <LoginPage />, withLayout: false },
+  { path: '/login', element: <LoginPage />, withLayout: false },
+  { path: '/unauthorized', element: <div className="h-screen flex items-center justify-center bg-bg text-white">403 - No tienes permisos para ver esta página</div>, withLayout: false },
 ];
 
-/** Rutas privadas — requieren autenticación (y opcionalmente un rol) */
 export const privateRoutes: AppRoute[] = [
+  {
+    path: '',
+    element: <DashboardPage />,
+    withLayout: true,
+    requiresAuth: true,
+    roles: ['ADMIN', 'STOCK', 'PEDIDOS'],
+  },
+  {
+    path: 'usuarios',
+    element: <UsuariosPage />,
+    withLayout: true,
+    requiresAuth: true,
+    roles: ['ADMIN'],
+  },
   {
     path: 'categorias',
     element: <CategoriasPage />,
     withLayout: true,
     requiresAuth: true,
-    roles: ['admin', 'manager'],
+    roles: ['ADMIN', 'STOCK'],
   },
   {
     path: 'ingredientes',
     element: <IngredientesPage />,
     withLayout: true,
     requiresAuth: true,
-    roles: ['admin', 'manager', 'staff'],
+    roles: ['ADMIN', 'STOCK'],
   },
   {
     path: 'productos',
     element: <ProductosPage />,
     withLayout: true,
     requiresAuth: true,
-    roles: ['admin', 'manager', 'staff'],
+    roles: ['ADMIN', 'STOCK'],
   },
   {
     path: 'productos/:id',
     element: <ProductoDetallePage />,
     withLayout: true,
     requiresAuth: true,
-    roles: ['admin', 'manager', 'staff'],
+    roles: ['ADMIN', 'STOCK'],
   },
   {
     path: 'pedidos',
     element: <PedidosPage />,
     withLayout: true,
     requiresAuth: true,
-    roles: ['admin', 'manager', 'staff'],
+    roles: ['ADMIN', 'PEDIDOS'],
   },
 ];

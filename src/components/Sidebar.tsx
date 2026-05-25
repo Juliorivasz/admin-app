@@ -5,7 +5,9 @@ import {
   LayoutGrid, 
   ClipboardList, 
   Settings, 
-  LogOut 
+  LogOut,
+  LayoutDashboard,
+  Users
 } from 'lucide-react';
 
 /**
@@ -22,10 +24,12 @@ import {
  */
 const Sidebar = () => {
   const mainNavItems = [
+    { name: 'Dashboard',    path: '/',             icon: LayoutDashboard },
+    { name: 'Pedidos',      path: '/pedidos',      icon: ClipboardList },
     { name: 'Productos',    path: '/productos',    icon: Box },
     { name: 'Ingredientes', path: '/ingredientes', icon: UtensilsCrossed },
     { name: 'Categorías',   path: '/categorias',   icon: LayoutGrid },
-    { name: 'Pedidos',      path: '/pedidos',      icon: ClipboardList },
+    { name: 'Usuarios',     path: '/usuarios',     icon: Users },
   ];
 
   return (

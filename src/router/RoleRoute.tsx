@@ -28,7 +28,7 @@ interface RoleRouteProps {
  */
 const useAuthUser = () => {
   // TODO: obtener el rol real desde el contexto de auth / JWT claims
-  return { role: 'admin' as UserRole };
+  return { role: 'ADMIN' as UserRole };
 };
 
 const RoleRoute = ({ roles, children }: RoleRouteProps) => {

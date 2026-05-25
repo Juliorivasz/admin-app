@@ -6,7 +6,7 @@ import type {
 } from '../types';
 
 export const getProductos = async (nombre?: string, disponible?: boolean, include_inactivos?: boolean): Promise<Producto[]> => {
-  const params: any = {};
+  const params: any = { page: 1, page_size: 100 };
   if (nombre) params.nombre = nombre;
   if (disponible !== undefined) params.disponible = disponible;
   if (include_inactivos) params.include_inactivos = true;

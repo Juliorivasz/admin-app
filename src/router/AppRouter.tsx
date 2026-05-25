@@ -36,9 +36,6 @@ const AppRouter = () => (
 
         {/* ── Rutas privadas (dentro del Layout con sidebar) ────────────── */}
         <Route path="/" element={<Layout />}>
-          {/* Redirección por defecto */}
-          <Route index element={<Navigate to="/productos" replace />} />
-
           {privateRoutes.map((route) => {
             let element = route.element;
 

@@ -18,6 +18,10 @@ export interface FormFieldConfig<T> {
   stepIncrement?: string;
   /** En desktop ocupa el ancho completo (2 columnas). Por defecto false (ocupa 1 columna). */
   fullWidth?: boolean;
+  /** Permite deshabilitar el campo dinámicamente según el estado del formulario */
+  disabled?: boolean | ((values: T) => boolean);
+  /** Permite ocultar el campo dinámicamente según el estado del formulario */
+  hidden?: boolean | ((values: T) => boolean);
 }
 
 interface GenericWizardFormProps<T> {
@@ -72,71 +76,83 @@ export function GenericWizardForm<T>({
   const closeAndReset = () => { form.reset(); setCurrentStep(0); setSubmitError(null); onClose(); };
 
   const renderField = (config: FormFieldConfig<T>) => (
-    <form.Field
-      key={config.name as string}
-      name={config.name as any}
-      validators={{
-        onChange: ({ value }) =>
-          config.required && !value && value !== 0 ? 'Este campo es obligatorio' : undefined,
-      }}
-    >
-      {(field) => (
-        <div className="flex flex-col gap-1.5 mb-4">
-          {config.type !== 'checkbox' && (
-            <div className="flex items-center gap-2 mb-1">
-              <label className="text-sm font-semibold text-text flex items-center gap-1.5">
-                {config.label} {config.required && <span className="text-danger">*</span>}
-              </label>
-              {config.description && (
-                <div className="group relative flex items-center">
-                  <HelpCircle className="w-4 h-4 text-text-muted cursor-help hover:text-primary transition-colors" />
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-3 bg-surface-2 text-text text-xs rounded-xl shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
-                    {config.description}
+    <form.Subscribe selector={(state) => state.values}>
+      {(values) => {
+        const isHidden = typeof config.hidden === 'function' ? config.hidden(values as T) : config.hidden;
+        const isDisabledFunc = typeof config.disabled === 'function' ? config.disabled(values as T) : config.disabled;
+        const isDisabled = isViewMode || isDisabledFunc;
+
+        if (isHidden) return null;
+
+        return (
+          <form.Field
+            key={config.name as string}
+            name={config.name as any}
+            validators={{
+              onChange: ({ value }) =>
+                config.required && !value && value !== 0 ? 'Este campo es obligatorio' : undefined,
+            }}
+          >
+            {(field) => (
+              <div className="flex flex-col gap-1.5 mb-4">
+                {config.type !== 'checkbox' && (
+                  <div className="flex items-center gap-2 mb-1">
+                    <label className="text-sm font-semibold text-text flex items-center gap-1.5">
+                      {config.label} {config.required && <span className="text-danger">*</span>}
+                    </label>
+                    {config.description && (
+                      <div className="group relative flex items-center">
+                        <HelpCircle className="w-4 h-4 text-text-muted cursor-help hover:text-primary transition-colors" />
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-3 bg-surface-2 text-text text-xs rounded-xl shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
+                          {config.description}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
 
-          {config.type === 'text' || config.type === 'number' ? (
-            <Input type={config.type} placeholder={config.placeholder}
-              value={field.state.value as string | number}
-              onChange={(e) => field.handleChange(e.target.value as any)}
-              onBlur={field.handleBlur} min={config.min} step={config.stepIncrement}
-              disabled={isViewMode} className={isViewMode ? 'opacity-70 cursor-not-allowed' : ''} />
-          ) : config.type === 'textarea' ? (
-            <textarea
-              className={`w-full rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none min-h-[80px] ${isViewMode ? 'opacity-70 cursor-not-allowed' : ''}`}
-              placeholder={config.placeholder} value={field.state.value as string}
-              onChange={(e) => field.handleChange(e.target.value as any)}
-              onBlur={field.handleBlur} disabled={isViewMode} />
-          ) : config.type === 'select' ? (
-            <select
-              className={`w-full rounded-xl border border-border bg-surface-2 px-4 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${isViewMode ? 'opacity-70 cursor-not-allowed' : ''}`}
-              value={field.state.value as string | number}
-              onChange={(e) => field.handleChange(e.target.value as any)}
-              onBlur={field.handleBlur} disabled={isViewMode}>
-              <option value="">Seleccione una opción...</option>
-              {config.options?.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          ) : config.type === 'checkbox' ? (
-            <label className="flex items-center gap-3 mt-2 mb-2 p-4 border border-border bg-surface-2/30 rounded-xl cursor-pointer hover:bg-surface-2/60 transition-colors">
-              <input type="checkbox" checked={field.state.value as boolean}
-                onChange={(e) => field.handleChange(e.target.checked as any)}
-                onBlur={field.handleBlur} disabled={isViewMode}
-                className="rounded text-primary focus:ring-primary bg-surface-2 border-border h-5 w-5 disabled:opacity-50" />
-              <span className="text-sm text-text font-medium">{config.label}</span>
-            </label>
-          ) : null}
+                {config.type === 'text' || config.type === 'number' ? (
+                  <Input type={config.type} placeholder={config.placeholder}
+                    value={field.state.value as string | number}
+                    onChange={(e) => field.handleChange(e.target.value as any)}
+                    onBlur={field.handleBlur} min={config.min} step={config.stepIncrement}
+                    disabled={isDisabled} className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''} />
+                ) : config.type === 'textarea' ? (
+                  <textarea
+                    className={`w-full rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none min-h-[80px] ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    placeholder={config.placeholder} value={field.state.value as string}
+                    onChange={(e) => field.handleChange(e.target.value as any)}
+                    onBlur={field.handleBlur} disabled={isDisabled} />
+                ) : config.type === 'select' ? (
+                  <select
+                    className={`w-full rounded-xl border border-border bg-surface-2 px-4 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    value={field.state.value as string | number}
+                    onChange={(e) => field.handleChange(e.target.value as any)}
+                    onBlur={field.handleBlur} disabled={isDisabled}>
+                    <option value="">Seleccione una opción...</option>
+                    {config.options?.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                ) : config.type === 'checkbox' ? (
+                  <label className={`flex items-center gap-3 mt-2 mb-2 p-4 border border-border bg-surface-2/30 rounded-xl transition-colors ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-surface-2/60'}`}>
+                    <input type="checkbox" checked={field.state.value as boolean}
+                      onChange={(e) => field.handleChange(e.target.checked as any)}
+                      onBlur={field.handleBlur} disabled={isDisabled}
+                      className="rounded text-primary focus:ring-primary bg-surface-2 border-border h-5 w-5 disabled:opacity-50 disabled:cursor-not-allowed" />
+                    <span className="text-sm text-text font-medium">{config.label}</span>
+                  </label>
+                ) : null}
 
-          {field.state.meta.errors.length > 0 && (
-            <span className="text-xs text-danger mt-1">{field.state.meta.errors.join(', ')}</span>
-          )}
-        </div>
-      )}
-    </form.Field>
+                {field.state.meta.errors.length > 0 && (
+                  <span className="text-xs text-danger mt-1">{field.state.meta.errors.join(', ')}</span>
+                )}
+              </div>
+            )}
+          </form.Field>
+        );
+      }}
+    </form.Subscribe>
   );
 
   // Footer anclado al fondo — nunca hace scroll
