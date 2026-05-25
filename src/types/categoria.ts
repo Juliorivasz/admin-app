@@ -27,5 +27,5 @@ export interface ProductoEnCategoria {
 }
 
 export interface CategoriaDetalle extends Categoria {
-  productos_vinculados: ProductoEnCategoria[];
+  productos_vinculados?: ProductoEnCategoria[];
 }

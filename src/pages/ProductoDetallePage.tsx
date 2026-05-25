@@ -47,36 +47,24 @@ const ProductoDetallePage = () => {
   });
 
   // Helpers para construir payloads
-  const ingPayload = () => producto?.ingredientes.map(i => ({ ingrediente_id: i.ingrediente_id, es_removible: i.es_removible })) || [];
-  const catPayload = () => producto?.categorias.map(c => ({ categoria_id: c.id, es_principal: c.es_principal })) || [];
+  const ingPayload = () => producto?.ingredientes.map(i => (i as any).ingrediente_id || i) || [];
+  const catPayload = () => producto?.categorias.map(c => (c as any).categoria_id || c) || [];
 
-  const handleAddIngrediente = (ingrediente_id: number, es_removible: boolean) => {
-    updateMutation.mutate({ id: productoId, data: { ingredientes: [...ingPayload(), { ingrediente_id, es_removible }] } });
+  const handleAddIngrediente = (ingrediente_id: number) => {
+    updateMutation.mutate({ id: productoId, data: { ingredientes: [...ingPayload(), ingrediente_id] } });
   };
 
   const handleRemoveIngrediente = (ingredienteId: number) => {
-    updateMutation.mutate({ id: productoId, data: { ingredientes: ingPayload().filter(i => i.ingrediente_id !== ingredienteId) } });
+    updateMutation.mutate({ id: productoId, data: { ingredientes: ingPayload().filter(i => i !== ingredienteId) } });
   };
 
-  const handleAddCategoria = (categoria_id: number, es_principal: boolean) => {
-    let categorias = [...catPayload(), { categoria_id, es_principal }];
-    if (es_principal) categorias = categorias.map(c => c.categoria_id === categoria_id ? c : { ...c, es_principal: false });
+  const handleAddCategoria = (categoria_id: number) => {
+    const categorias = [...catPayload(), categoria_id];
     updateMutation.mutate({ id: productoId, data: { categorias } });
   };
 
   const handleRemoveCategoria = (categoriaId: number) => {
-    updateMutation.mutate({ id: productoId, data: { categorias: catPayload().filter(c => c.categoria_id !== categoriaId) } });
-  };
-
-  const handleToggleRemovible = (ingredienteId: number) => {
-    const updated = ingPayload().map(i =>
-      i.ingrediente_id === ingredienteId ? { ...i, es_removible: !i.es_removible } : i
-    );
-    updateMutation.mutate({ id: productoId, data: { ingredientes: updated } });
-  };
-
-  const handleSetPrincipal = (categoriaId: number) => {
-    updateMutation.mutate({ id: productoId, data: { categorias: catPayload().map(c => ({ ...c, es_principal: c.categoria_id === categoriaId })) } });
+    updateMutation.mutate({ id: productoId, data: { categorias: catPayload().filter(c => c !== categoriaId) } });
   };
 
   if (isLoading || isError || !producto) {
@@ -98,11 +86,10 @@ const ProductoDetallePage = () => {
         </Link>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-4xl font-bold text-text">{producto.nombre}</h1>
-            <p className="text-text-muted mt-2 text-lg max-w-2xl">{producto.descripcion || 'Sin descripción'}</p>
+            <h1 className="text-4xl font-bold text-text">{producto.name}</h1>
             <div className="mt-6 flex items-center gap-4">
               <span className="text-3xl font-bold text-primary bg-primary/10 px-4 py-1.5 rounded-xl border border-primary/20">
-                ${producto.precio_base.toFixed(2)}
+                ${producto.price.toFixed(2)}
               </span>
               <StatusBadge variant={producto.disponible ? 'disponible' : 'no-disponible'} />
               <StockBadge cantidad={producto.stock_cantidad} unidad="uds" />
@@ -130,22 +117,10 @@ const ProductoDetallePage = () => {
               <div className="text-center py-10 text-text-muted border border-dashed border-border rounded-xl">Sin ingredientes asignados</div>
             ) : (
               <ul className="space-y-1">
-                {producto.ingredientes.map(ing => (
-                  <RelacionItemRow key={ing.ingrediente_id} onRemove={() => handleRemoveIngrediente(ing.ingrediente_id)} isPending={updateMutation.isPending}>
-                    <span className="font-medium text-text">{ing.nombre}</span>
-                    {ing.es_alergeno && <StatusBadge variant="alergeno" />}
-                    {/* Toggle Fijo / Opcional inline — sin necesidad de borrar y re-agregar */}
-                    <button
-                      onClick={() => handleToggleRemovible(ing.ingrediente_id)}
-                      disabled={updateMutation.isPending}
-                      title={ing.es_removible ? 'Opcional: click para fijar' : 'Fijo: click para hacer opcional'}
-                      className={`text-[10px] px-1.5 py-0.5 rounded border transition-all font-semibold disabled:opacity-50
-                        ${ing.es_removible
-                          ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20'
-                          : 'bg-surface-2 border-border text-text-muted hover:border-blue-400/40 hover:text-blue-400'}`}
-                    >
-                      {ing.es_removible ? 'Opc.' : 'Fijo'}
-                    </button>
+                {producto.ingredientes.map((ing: any) => (
+                  <RelacionItemRow key={ing.ingrediente_id || ing} onRemove={() => handleRemoveIngrediente(ing.ingrediente_id || ing)} isPending={updateMutation.isPending}>
+                    <span className="font-medium text-text">{ing.name || ing.nombre}</span>
+                    {ing.esAlergeno && <StatusBadge variant="alergeno" />}
                   </RelacionItemRow>
                 ))}
               </ul>
@@ -167,17 +142,9 @@ const ProductoDetallePage = () => {
               <div className="text-center py-10 text-text-muted border border-dashed border-border rounded-xl">Sin categorías asignadas</div>
             ) : (
               <div className="space-y-1">
-                {producto.categorias.map(cat => (
-                  <RelacionItemRow key={cat.id} onRemove={() => handleRemoveCategoria(cat.id)} isPending={updateMutation.isPending}>
+                {producto.categorias.map((cat: any) => (
+                  <RelacionItemRow key={cat.id || cat.categoria_id} onRemove={() => handleRemoveCategoria(cat.id || cat.categoria_id)} isPending={updateMutation.isPending}>
                     <span className="font-medium text-text">{cat.nombre}</span>
-                    {cat.es_principal ? (
-                      <StatusBadge variant="principal" />
-                    ) : (
-                      <button onClick={() => handleSetPrincipal(cat.id)} disabled={updateMutation.isPending}
-                        className="px-2 py-0.5 rounded-md text-xs font-medium text-text-muted hover:text-primary hover:bg-primary/10 border border-border transition-all disabled:opacity-50">
-                        Hacer principal
-                      </button>
-                    )}
                   </RelacionItemRow>
                 ))}
               </div>

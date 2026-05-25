@@ -49,19 +49,27 @@ export function GenericWizardForm<T>({
 }: GenericWizardFormProps<T>) {
   const [currentStep, setCurrentStep] = useState(0);
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  
   const form = useForm({
     defaultValues: defaultValues as any,
     onSubmit: async ({ value }) => {
-      await onSubmit(value as T);
-      form.reset();
-      setCurrentStep(0);
+      setSubmitError(null);
+      try {
+        await onSubmit(value as T);
+        form.reset();
+        setCurrentStep(0);
+        onClose();
+      } catch (err: any) {
+        setSubmitError(err.message || 'No se pudo guardar. Verificá tu conexión y volvé a intentarlo.');
+      }
     },
   });
 
   const nextStep = () => setCurrentStep((p) => Math.min(p + 1, stepNames.length - 1));
   const prevStep = () => setCurrentStep((p) => Math.max(p - 1, 0));
   const isLastStep = currentStep === stepNames.length - 1;
-  const closeAndReset = () => { form.reset(); setCurrentStep(0); onClose(); };
+  const closeAndReset = () => { form.reset(); setCurrentStep(0); setSubmitError(null); onClose(); };
 
   const renderField = (config: FormFieldConfig<T>) => (
     <form.Field
@@ -195,6 +203,17 @@ export function GenericWizardForm<T>({
           </div>
         ))}
       </div>
+      
+      {/* Error de red / servidor */}
+      {submitError && (
+        <div className="mt-4 flex items-start gap-3 p-3 bg-danger/10 border border-danger/30 rounded-xl text-sm text-danger animate-in fade-in">
+          <span className="shrink-0">⚡</span>
+          <div>
+            <p className="font-semibold">Error al guardar</p>
+            <p className="text-danger/80 mt-0.5">{submitError}</p>
+          </div>
+        </div>
+      )}
     </Modal>
   );
 }

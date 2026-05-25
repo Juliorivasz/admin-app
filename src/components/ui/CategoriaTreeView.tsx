@@ -80,8 +80,8 @@ const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
         {/* Fila del nodo */}
         <div
           onClick={() => onRowClick(node.item)}
-          className={`group flex items-center justify-between p-4 border-b border-border/50 hover:bg-surface-2/60 transition-all duration-200 cursor-pointer ${isInactive ? 'opacity-50' : ''}`}
-          style={{ paddingLeft: `${Math.max(1, node.depth * 2)}rem` }}
+          className={`group flex items-center justify-between px-6 py-4 hover:bg-[#252636]/50 transition-colors duration-150 cursor-pointer ${isInactive ? 'opacity-50' : ''}`}
+          style={{ paddingLeft: `${Math.max(1.5, node.depth * 2.5)}rem` }}
         >
           {/* Lado izquierdo: Nombre y Flecha */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -101,7 +101,7 @@ const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
             </div>
 
             <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-text truncate">
+              <span className="font-normal text-[14px] text-text truncate">
                 {node.item.nombre}
               </span>
               {/* Descripción visible en mobile, pero en desktop se acomoda distinto si se quiere. Por ahora siempre visible si existe */}
@@ -115,7 +115,7 @@ const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
 
           {/* Columnas adicionales visibles solo en Desktop */}
           <div className="hidden sm:flex items-center flex-1 min-w-0 px-4">
-            <span className="text-sm text-text-muted truncate">
+            <span className="text-[14px] font-normal text-text-muted truncate">
               {node.item.descripcion || '-'}
             </span>
           </div>
@@ -138,15 +138,15 @@ const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
 
   return (
     <div className="w-full bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
-      {/* Header de la tabla — label-md uppercase (Solo Desktop) */}
-      <div className="hidden sm:flex items-center px-4 py-3 border-b border-border bg-surface-2 text-text-muted font-medium uppercase tracking-wider" style={{ fontSize: '12px' }}>
-        <div className="flex-1 px-8">Nombre de Categoría</div>
-        <div className="flex-1 px-4">Descripción</div>
-        <div className="w-24 text-right pr-4">Estado</div>
+      {/* Header de la tabla */}
+      <div className="hidden sm:flex items-center border-b border-border text-[11px] font-semibold text-text-muted uppercase tracking-widest">
+        <div className="flex-1 px-6 py-4">Nombre de Categoría</div>
+        <div className="flex-1 px-6 py-4">Descripción</div>
+        <div className="w-24 px-6 py-4 text-right">Estado</div>
       </div>
 
       {/* Cuerpo del Árbol */}
-      <div className="flex flex-col divide-y divide-border/60">
+      <div className="flex flex-col divide-y divide-border">
         {tree.map(renderNode)}
       </div>
     </div>

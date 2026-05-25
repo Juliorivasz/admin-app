@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProductos, createProducto, updateProducto, toggleEstadoProducto } from '../services/productoService';
+import { getProductos, createProducto, updateProducto, deleteProducto } from '../services/productoService';
 import { DataTable } from '../components/ui/DataTable';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import PageHeader from '../components/ui/PageHeader';
@@ -46,8 +46,8 @@ const ProductosPage = () => {
     let result = showInactivos
       ? productos.filter((p: any) => p.deleted_at !== null)
       : productos.filter((p: any) => !p.deleted_at);
-    if (precioMin) result = result.filter((p: any) => p.precio_base >= parseFloat(precioMin));
-    if (precioMax) result = result.filter((p: any) => p.precio_base <= parseFloat(precioMax));
+    if (precioMin) result = result.filter((p: any) => p.price >= parseFloat(precioMin));
+    if (precioMax) result = result.filter((p: any) => p.price <= parseFloat(precioMax));
     return result;
   }, [productos, precioMin, precioMax, showInactivos]);
 
@@ -67,8 +67,8 @@ const ProductosPage = () => {
     },
   });
 
-  const toggleEstadoMutation = useMutation({
-    mutationFn: toggleEstadoProducto,
+  const deleteMutation = useMutation({
+    mutationFn: deleteProducto,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['productos'] }),
   });
 
@@ -80,7 +80,7 @@ const ProductosPage = () => {
       cell: (info) => {
         // En una app real, aquí usaríamos info.row.original.imagen_url
         // Por ahora simulamos si tiene imagen o es el placeholder gris
-        const nombre = info.row.original.nombre.toLowerCase();
+        const nombre = (info.row.original.name || '').toLowerCase();
         const hasImage = nombre.includes('pizza') || nombre.includes('hamburguesa');
         
         return (
@@ -88,7 +88,7 @@ const ProductosPage = () => {
             {hasImage ? (
               <img 
                 src={`https://api.dicebear.com/7.x/shapes/svg?seed=${nombre}&backgroundColor=1D1E2C`} 
-                alt={info.row.original.nombre} 
+                alt={info.row.original.name} 
                 className="w-full h-full object-cover opacity-80"
                 loading="lazy"
               />
@@ -100,7 +100,7 @@ const ProductosPage = () => {
       },
     },
     {
-      accessorKey: 'nombre',
+      accessorKey: 'name',
       header: 'Producto',
       cell: (info) => (
         <span className="font-medium text-text text-[14px]">
@@ -109,7 +109,7 @@ const ProductosPage = () => {
       ),
     },
     {
-      accessorKey: 'precio_base',
+      accessorKey: 'price',
       header: 'Precio Base',
       cell: (info) => (
         <span className="text-text text-[14px]">
@@ -210,12 +210,10 @@ const ProductosPage = () => {
         key={selectedItem?.id ?? 'create'}
         isOpen={isModalOpen}
         onClose={closeModal}
-        title={modalMode === 'create' ? 'Nuevo Producto' : selectedItem?.nombre ?? 'Detalles'}
+        title={modalMode === 'create' ? 'Nuevo Producto' : selectedItem?.name ?? 'Detalles'}
         defaultValues={selectedItem ?? {
-          nombre: '',
-          descripcion: '',
-          imagen_url: '',
-          precio_base: 0,
+          name: '',
+          price: 0,
           stock_cantidad: 0,
           disponible: true,
           categorias: [],
@@ -231,7 +229,7 @@ const ProductosPage = () => {
         isOpen={!!productoToToggle}
         onClose={() => setProductoToToggle(null)}
         onConfirm={() => {
-          toggleEstadoMutation.mutate(productoToToggle?.id);
+          deleteMutation.mutate(productoToToggle?.id);
           setSelectedItem({ ...productoToToggle, deleted_at: new Date().toISOString(), disponible: false });
           setProductoToToggle(null);
         }}
@@ -239,7 +237,7 @@ const ProductosPage = () => {
         confirmText="Sí, Ocultar"
         message={
           <>
-            ¿Seguro que deseas desactivar <strong className="text-text">{productoToToggle?.nombre}</strong>?
+            ¿Seguro que deseas desactivar <strong className="text-text">{productoToToggle?.name}</strong>?
             <div className="mt-4 p-4 bg-surface-2 border border-border rounded-xl text-text-muted text-sm">
               Al desactivarlo dejará de ser visible para los clientes.
             </div>

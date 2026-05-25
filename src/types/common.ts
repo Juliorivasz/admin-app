@@ -2,4 +2,9 @@
 // Tipos utilitarios globales
 // ==========================================
 
-export type PaginatedResponse<T> = T[];
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  page_size: number;
+  total_pages: number;
+}

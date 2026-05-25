@@ -2,7 +2,6 @@ import api from '../api/axios';
 import type { 
   Producto, 
   ProductoCreate, 
-  ProductoUpdate, 
   ProductoDetalle
 } from '../types';
 
@@ -11,7 +10,22 @@ export const getProductos = async (nombre?: string, disponible?: boolean, includ
   if (nombre) params.nombre = nombre;
   if (disponible !== undefined) params.disponible = disponible;
   if (include_inactivos) params.include_inactivos = true;
-  return api.get('/productos/', { params });
+  try {
+    const response: any = await api.get('/productos/', { params });
+    // Manejar el bug del backend donde devuelve list[PaginatedResponse] o PaginatedResponse normal
+    if (Array.isArray(response)) {
+      if (response.length > 0 && response[0].items) {
+        return response[0].items;
+      }
+      return response;
+    } else if (response && response.items) {
+      return response.items;
+    }
+    return [];
+  } catch (error: any) {
+    if (error.status === 404) return [];
+    throw error;
+  }
 };
 
 export const getProducto = async (id: number): Promise<ProductoDetalle> => {
@@ -22,12 +36,17 @@ export const createProducto = async (data: ProductoCreate): Promise<Producto> =>
   return api.post('/productos/', data);
 };
 
-export const updateProducto = async ({ id, data }: { id: number; data: ProductoUpdate }): Promise<Producto> => {
-  return api.patch(`/productos/${id}`, data);
+export interface UpdateProductoParams {
+  id: number;
+  data: Partial<ProductoCreate>;
+}
+
+export const updateProducto = async ({ id, data }: UpdateProductoParams): Promise<Producto> => {
+  return api.put(`/productos/${id}`, data);
 };
 
-export const toggleEstadoProducto = async (id: number): Promise<Producto> => {
-  return api.patch(`/productos/${id}/toggle-estado`);
+export const deleteProducto = async (id: number): Promise<void> => {
+  return api.delete(`/productos/${id}`);
 };
 
 // Endpoints separados para relaciones intermedios han sido eliminados del backend

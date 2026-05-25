@@ -43,7 +43,7 @@ const AddIngredienteForm = ({
           <option value={0} disabled>Selecciona un ingrediente...</option>
           {disponibles.map((ing) => (
             <option key={ing.id} value={ing.id}>
-              {ing.nombre} {ing.es_alergeno ? '⚠️' : ''}
+              {ing.name} {ing.esAlergeno ? '⚠️' : ''}
             </option>
           ))}
         </select>

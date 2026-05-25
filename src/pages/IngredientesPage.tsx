@@ -7,7 +7,6 @@ import PageHeader from '../components/ui/PageHeader';
 import FilterBar from '../components/ui/FilterBar';
 import QueryStateWrapper from '../components/ui/QueryStateWrapper';
 import StatusBadge from '../components/ui/StatusBadge';
-import StockBadge from '../components/ui/StockBadge';
 import type { IngredienteCreate } from '../types';
 import type { ColumnDef } from '@tanstack/react-table';
 
@@ -26,8 +25,8 @@ const IngredientesPage = () => {
 
   const filteredData = useMemo(() => {
     if (!ingredientes) return [];
-    if (alergenoFilter === 'si') return ingredientes.filter((i: any) => i.es_alergeno);
-    if (alergenoFilter === 'no') return ingredientes.filter((i: any) => !i.es_alergeno);
+    if (alergenoFilter === 'si') return ingredientes.filter((i: any) => i.esAlergeno);
+    if (alergenoFilter === 'no') return ingredientes.filter((i: any) => !i.esAlergeno);
     return ingredientes;
   }, [ingredientes, alergenoFilter]);
 
@@ -43,42 +42,26 @@ const IngredientesPage = () => {
 
   const columns = useMemo<ColumnDef<any, any>[]>(() => [
     {
-      accessorKey: 'nombre',
+      accessorKey: 'name',
       header: 'Nombre',
       cell: (info) => <span className="font-medium text-text">{info.getValue<string>()}</span>,
     },
     {
-      accessorKey: 'descripcion',
+      accessorKey: 'description',
       header: 'Descripción',
       cell: (info) => <span className="text-text-muted">{info.getValue<string>() || '-'}</span>,
     },
     {
-      id: 'stock',
-      header: 'Stock',
-      cell: ({ row }) => (
-        <StockBadge cantidad={row.original.cantidad ?? 0} unidad={row.original.unidad_medida || 'unidad'} />
-      ),
-    },
-    {
-      accessorKey: 'es_alergeno',
+      accessorKey: 'esAlergeno',
       header: 'Alérgeno',
       cell: (info) => <StatusBadge variant={info.getValue<boolean>() ? 'alergeno' : 'no-alergeno'} />,
     },
   ], []);
 
   const formFields: FormFieldConfig<IngredienteCreate>[] = [
-    { name: 'nombre', label: 'Nombre del Ingrediente', description: 'Identificador único del insumo.', type: 'text', step: 0, required: true, placeholder: 'Ej: Harina' },
-    { name: 'descripcion', label: 'Descripción (Opcional)', description: 'Detalles adicionales, marca o proveedor.', type: 'textarea', step: 0, placeholder: 'Ej: Harina de trigo 000' },
-    { name: 'cantidad' as any, label: 'Cantidad en Stock', description: 'Cantidad disponible actualmente.', type: 'number', step: 0, required: true, placeholder: 'Ej: 5.5' },
-    {
-      name: 'unidad_medida' as any, label: 'Unidad de Medida', description: 'Unidad con la que se mide este ingrediente.', type: 'select', step: 0, required: true,
-      options: [
-        { value: 'kg', label: 'Kilogramo (kg)' }, { value: 'g', label: 'Gramo (g)' },
-        { value: 'l', label: 'Litro (l)' }, { value: 'ml', label: 'Mililitro (ml)' },
-        { value: 'unidad', label: 'Unidad' }, { value: 'porción', label: 'Porción' },
-      ],
-    },
-    { name: 'es_alergeno' as any, label: '¿Es un alérgeno?', description: 'Marcar si este ingrediente puede causar reacciones alérgicas.', type: 'checkbox', step: 0 },
+    { name: 'name' as any, label: 'Nombre del Ingrediente', description: 'Identificador único del insumo.', type: 'text', step: 0, required: true, placeholder: 'Ej: Harina' },
+    { name: 'description' as any, label: 'Descripción (Opcional)', description: 'Detalles adicionales, marca o proveedor.', type: 'textarea', step: 0, placeholder: 'Ej: Harina de trigo 000' },
+    { name: 'esAlergeno' as any, label: '¿Es un alérgeno?', description: 'Marcar si este ingrediente puede causar reacciones alérgicas.', type: 'checkbox', step: 0 },
   ];
 
   const closeModal = () => { setIsModalOpen(false); setSelectedItem(null); setModalMode('create'); };
@@ -119,12 +102,13 @@ const IngredientesPage = () => {
       </QueryStateWrapper>
 
       <GenericWizardForm<IngredienteCreate>
+        key={isModalOpen ? (selectedItem?.id ?? 'create-open') : 'closed'}
         isOpen={isModalOpen}
         onClose={closeModal}
-        title={modalMode === 'create' ? 'Crear Ingrediente' : selectedItem?.nombre || 'Detalles'}
+        title={modalMode === 'create' ? 'Crear Ingrediente' : selectedItem?.name || 'Detalles'}
         stepNames={['Detalles del Ingrediente']}
         fields={formFields}
-        defaultValues={selectedItem || { nombre: '', descripcion: '', es_alergeno: false, cantidad: 0, unidad_medida: 'unidad' }}
+        defaultValues={selectedItem || { name: '', description: '', esAlergeno: false }}
         isViewMode={modalMode === 'view'}
         onEnableEdit={() => setModalMode('edit')}
         onSubmit={async (values) => {

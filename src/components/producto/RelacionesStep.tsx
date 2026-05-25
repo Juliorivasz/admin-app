@@ -17,35 +17,19 @@
 import { useState } from 'react';
 import type { Categoria } from '../../types/categoria';
 import type { Ingrediente } from '../../types/ingrediente';
-import type { ProductoCategoriaCreate } from '../../types/productoCategoria';
-import type { ProductoIngredienteCreate } from '../../types/productoIngrediente';
+import type { ProductoIngredientePayload } from '../../types/producto';
 
 interface RelacionesStepProps {
   categorias: Categoria[];
   ingredientes: Ingrediente[];
-  selectedCategorias: ProductoCategoriaCreate[];
-  selectedIngredientes: ProductoIngredienteCreate[];
-  onCategoriasChange: (v: ProductoCategoriaCreate[]) => void;
-  onIngredientesChange: (v: ProductoIngredienteCreate[]) => void;
+  selectedCategorias: number[];
+  selectedIngredientes: ProductoIngredientePayload[];
+  onCategoriasChange: (v: number[]) => void;
+  onIngredientesChange: (v: ProductoIngredientePayload[]) => void;
   isViewMode?: boolean;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-const SmallBadge = ({ children, color = 'default' }: { children: React.ReactNode; color?: 'primary' | 'orange' | 'blue' | 'warning' | 'default' }) => {
-  const colors = {
-    primary: 'bg-primary/10 text-primary border-primary/30',
-    orange: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
-    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
-    warning: 'bg-warning/10 text-warning border-warning/30',
-    default: 'bg-surface-2 text-text-muted border-border',
-  };
-  return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold border ${colors[color]}`}>
-      {children}
-    </span>
-  );
-};
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
@@ -62,33 +46,29 @@ const RelacionesStep = ({
   const [ingSearch, setIngSearch] = useState('');
 
   // ── Categorías ───────────────────────────────────────────────
-  const isCatSel = (id: number) => selectedCategorias.some(c => c.categoria_id === id);
-  const isCatPrincipal = (id: number) => selectedCategorias.find(c => c.categoria_id === id)?.es_principal ?? false;
+  const isCatSel = (id: number) => selectedCategorias.includes(id);
 
   const addCat = (id: number) => {
     if (isViewMode) return;
-    onCategoriasChange([...selectedCategorias, { categoria_id: id, es_principal: selectedCategorias.length === 0 }]);
+    onCategoriasChange([...selectedCategorias, id]);
   };
 
   const removeCat = (id: number) => {
     if (isViewMode) return;
-    const next = selectedCategorias.filter(c => c.categoria_id !== id);
-    if (next.length > 0 && !next.some(c => c.es_principal)) next[0] = { ...next[0], es_principal: true };
-    onCategoriasChange(next);
-  };
-
-  const setPrincipal = (id: number) => {
-    if (isViewMode) return;
-    onCategoriasChange(selectedCategorias.map(c => ({ ...c, es_principal: c.categoria_id === id })));
+    onCategoriasChange(selectedCategorias.filter(cid => cid !== id));
   };
 
   // ── Ingredientes ─────────────────────────────────────────────
   const isIngSel = (id: number) => selectedIngredientes.some(i => i.ingrediente_id === id);
-  const isIngOpcional = (id: number) => selectedIngredientes.find(i => i.ingrediente_id === id)?.es_removible ?? false;
 
   const addIng = (id: number) => {
     if (isViewMode) return;
-    onIngredientesChange([...selectedIngredientes, { ingrediente_id: id, es_removible: false }]);
+    onIngredientesChange([...selectedIngredientes, {
+      ingrediente_id: id,
+      cantidad: 1,
+      unidad_medida_id: 1, // Default a 'gramo'
+      es_removible: true
+    }]);
   };
 
   const removeIng = (id: number) => {
@@ -96,16 +76,14 @@ const RelacionesStep = ({
     onIngredientesChange(selectedIngredientes.filter(i => i.ingrediente_id !== id));
   };
 
-  const toggleOpcional = (id: number) => {
+  const updateIng = (id: number, data: Partial<ProductoIngredientePayload>) => {
     if (isViewMode) return;
-    onIngredientesChange(
-      selectedIngredientes.map(i => i.ingrediente_id === id ? { ...i, es_removible: !i.es_removible } : i)
-    );
+    onIngredientesChange(selectedIngredientes.map(i => i.ingrediente_id === id ? { ...i, ...data } : i));
   };
 
   // ── Filtros ──────────────────────────────────────────────────
   const filteredCats = categorias.filter(c => c.nombre.toLowerCase().includes(catSearch.toLowerCase()));
-  const filteredIngs = ingredientes.filter(i => i.nombre.toLowerCase().includes(ingSearch.toLowerCase()));
+  const filteredIngs = ingredientes.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase()));
   const selectedCatItems = filteredCats.filter(c => isCatSel(c.id));
   const availableCatItems = filteredCats.filter(c => !isCatSel(c.id));
   const selectedIngItems = filteredIngs.filter(i => isIngSel(i.id));
@@ -138,17 +116,9 @@ const RelacionesStep = ({
                 className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-primary/5 border border-primary/20 rounded-lg">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="text-xs font-medium text-text truncate">{cat.nombre}</span>
-                  {isCatPrincipal(cat.id) && <SmallBadge color="primary">★ Principal</SmallBadge>}
                 </div>
                 {!isViewMode && (
                   <div className="flex items-center gap-1 shrink-0">
-                    {!isCatPrincipal(cat.id) && (
-                      <button type="button" onClick={() => setPrincipal(cat.id)}
-                        className="text-[10px] px-1.5 py-0.5 rounded text-text-muted hover:text-warning hover:bg-warning/10 border border-border transition-all"
-                        title="Hacer principal">
-                        ★
-                      </button>
-                    )}
                     <button type="button" onClick={() => removeCat(cat.id)}
                       className="text-[10px] px-1.5 py-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 border border-border transition-all"
                       title="Quitar">
@@ -193,55 +163,52 @@ const RelacionesStep = ({
 
         {ingredientes.length > 5 && <SearchInput value={ingSearch} onChange={setIngSearch} placeholder="Buscar..." />}
 
-        {/* Seleccionados — filas con toggle Fijo/Opcional independiente */}
         {selectedIngItems.length > 0 && (
           <div className="space-y-1 mb-2">
             {selectedIngItems.map(ing => {
-              const opcional = isIngOpcional(ing.id);
+              const payload = selectedIngredientes.find(i => i.ingrediente_id === ing.id)!;
               return (
                 <div key={ing.id}
-                  className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-orange-500/5 border border-orange-500/20 rounded-lg">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-xs font-medium text-text truncate">{ing.nombre}</span>
-                    {ing.es_alergeno && <SmallBadge color="warning">⚠ Alérgeno</SmallBadge>}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {/* Toggle Fijo / Opcional — botón independiente, NO anidado en otro botón */}
-                    {!isViewMode && (
-                      <button type="button" onClick={() => toggleOpcional(ing.id)}
-                        title={opcional ? 'Opcional: el cliente puede pedirlo sin este ingrediente' : 'Fijo: siempre incluido'}
-                        className={`text-[10px] px-1.5 py-0.5 rounded border transition-all font-semibold
-                          ${opcional
-                            ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20'
-                            : 'bg-surface-2 border-border text-text-muted hover:border-blue-400/40 hover:text-blue-400'}`}>
-                        {opcional ? 'Opc.' : 'Fijo'}
-                      </button>
-                    )}
-                    {isViewMode && (
-                      <SmallBadge color={opcional ? 'blue' : 'default'}>
-                        {opcional ? 'Opc.' : 'Fijo'}
-                      </SmallBadge>
-                    )}
+                  className="flex flex-col gap-2 p-2 bg-orange-500/5 border border-orange-500/20 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-text truncate">{ing.name}</span>
                     {!isViewMode && (
                       <button type="button" onClick={() => removeIng(ing.id)}
                         className="text-[10px] px-1.5 py-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 border border-border transition-all"
-                        title="Quitar">
-                        ✕
-                      </button>
+                        title="Quitar">✕</button>
                     )}
                   </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input type="number" min="0" step="0.01" value={payload.cantidad}
+                      onChange={e => updateIng(ing.id, { cantidad: parseFloat(e.target.value) || 0 })}
+                      disabled={isViewMode}
+                      className="w-20 px-2 py-1 text-xs rounded bg-surface border border-border focus:outline-none focus:ring-1 focus:ring-orange-400 disabled:opacity-50"
+                      placeholder="Cant." />
+                    <select
+                      value={payload.unidad_medida_id}
+                      onChange={e => updateIng(ing.id, { unidad_medida_id: parseInt(e.target.value) || 1 })}
+                      disabled={isViewMode}
+                      className="flex-1 px-2 py-1 text-xs rounded bg-surface border border-border focus:outline-none focus:ring-1 focus:ring-orange-400 disabled:opacity-50"
+                    >
+                      <option value="1">Gramo (g)</option>
+                      <option value="2">Kilogramo (kg)</option>
+                      <option value="3">Mililitro (ml)</option>
+                      <option value="4">Litro (l)</option>
+                      <option value="5">Docena (doc)</option>
+                      <option value="6">Unidad (un)</option>
+                    </select>
+                  </div>
+                  <label className={`flex items-center gap-1.5 cursor-pointer w-max ${isViewMode ? 'opacity-70' : ''}`}>
+                    <input type="checkbox" checked={payload.es_removible}
+                      onChange={e => updateIng(ing.id, { es_removible: e.target.checked })}
+                      disabled={isViewMode}
+                      className="rounded text-orange-400 focus:ring-orange-400 bg-surface border-border h-3 w-3" />
+                    <span className="text-[10px] text-text-muted">Es removible por cliente</span>
+                  </label>
                 </div>
               );
             })}
           </div>
-        )}
-
-        {/* Leyenda */}
-        {!isViewMode && selectedIngredientes.length > 0 && (
-          <p className="text-[10px] text-text-muted mb-2">
-            <span className="font-semibold">Fijo</span> = siempre incluido &nbsp;·&nbsp;
-            <span className="font-semibold text-blue-400">Opc.</span> = el cliente puede pedirlo sin él
-          </p>
         )}
 
         {/* Disponibles */}
@@ -254,8 +221,8 @@ const RelacionesStep = ({
               {availableIngItems.map(ing => (
                 <button key={ing.id} type="button" onClick={() => addIng(ing.id)} disabled={isViewMode}
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-surface-2 border-border text-text-muted hover:border-orange-400/40 hover:text-orange-400 hover:bg-orange-500/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                  + {ing.nombre}
-                  {ing.es_alergeno && <span className="text-[9px] text-warning">⚠</span>}
+                  + {ing.name}
+                  {ing.esAlergeno && <span className="text-[9px] text-warning">⚠</span>}
                 </button>
               ))}
             </div>

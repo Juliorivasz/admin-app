@@ -2,35 +2,52 @@
 // Interfaces de Producto y sus relaciones N:N
 // ==========================================
 
-import type { ProductoCategoriaCreate } from "./productoCategoria";
-import type { ProductoIngredienteCreate } from "./productoIngrediente";
+
 
 
 export interface ProductoBase {
-  nombre: string;
-  descripcion?: string | null;
-  precio_base: number;
-  imagen_url?: string | null;
+  name: string;
+  price: number;
   stock_cantidad: number;
   disponible: boolean;
 }
 
+export interface ProductoCategoriaRead {
+  categoria_id: number;
+  es_principal: boolean;
+  delete_at?: string | null;
+}
+
+export interface ProductoIngredienteRead {
+  ingrediente_id: number;
+}
+
 export interface Producto extends ProductoBase {
   id: number;
-  created_at?: string | null;
-  updated_at?: string | null;
-  deleted_at?: string | null;
+  categorias: ProductoCategoriaRead[];
+  ingredientes: ProductoIngredienteRead[];
+}
+
+export interface ProductoIngredientePayload {
+  ingrediente_id: number;
+  cantidad: number;
+  unidad_medida_id: number;
+  es_removible: boolean;
 }
 
 export interface ProductoCreate extends ProductoBase {
-  categorias?: ProductoCategoriaCreate[];
-  ingredientes?: ProductoIngredienteCreate[];
+  categorias: number[];
+  ingredientes?: ProductoIngredientePayload[] | null;
+  unidad_venta_id: number;
 }
 
 export interface ProductoUpdate extends Partial<ProductoBase> {
-  categorias?: ProductoCategoriaCreate[];
-  ingredientes?: ProductoIngredienteCreate[];
+  categorias?: number[] | null;
+  ingredientes?: ProductoIngredientePayload[] | null;
+  unidad_venta_id?: number | null;
 }
+
+
 
 // Vistas anidadas para el detalle del producto
 export interface CategoriaEnProducto {
@@ -46,7 +63,7 @@ export interface IngredienteDetalle {
   es_alergeno: boolean;
 }
 
-export interface ProductoDetalle extends Producto {
+export interface ProductoDetalle extends Omit<Producto, 'categorias' | 'ingredientes'> {
   categorias: CategoriaEnProducto[];
   ingredientes: IngredienteDetalle[];
 }

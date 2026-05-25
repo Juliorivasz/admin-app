@@ -1,20 +1,34 @@
 import api from '../api/axios';
-import type { Ingrediente, IngredienteCreate, IngredienteUpdate } from '../types';
+import type { Ingrediente, IngredienteCreate } from '../types';
 
 export const getIngredientes = async (nombre?: string): Promise<Ingrediente[]> => {
   const params: Record<string, any> = {};
   if (nombre) params.nombre = nombre;
-  return api.get('/ingredientes/', { params });
+  try {
+    return await api.get('/Ingredientes/', { params });
+  } catch (error: any) {
+    if (error.status === 404) return [];
+    throw error;
+  }
 };
 
 export const getIngrediente = async (id: number): Promise<Ingrediente> => {
-  return api.get(`/ingredientes/${id}`);
+  return api.get(`/Ingredientes/${id}`);
 };
 
 export const createIngrediente = async (data: IngredienteCreate): Promise<Ingrediente> => {
-  return api.post('/ingredientes/', data);
+  return api.post('/Ingredientes/', data);
 };
 
-export const updateIngrediente = async ({ id, data }: { id: number; data: IngredienteUpdate }): Promise<Ingrediente> => {
-  return api.patch(`/ingredientes/${id}`, data);
+export interface UpdateIngredienteParams {
+  id: number;
+  data: IngredienteCreate;
+}
+
+export const updateIngrediente = async ({ id, data }: UpdateIngredienteParams): Promise<Ingrediente> => {
+  return api.put(`/Ingredientes/${id}`, data);
+};
+
+export const deleteIngrediente = async (id: number): Promise<void> => {
+  return api.delete(`/Ingredientes/${id}`);
 };

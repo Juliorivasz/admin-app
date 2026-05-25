@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCategorias, createCategoria, updateCategoria, toggleEstadoCategoria } from '../services/categoriaService';
+import { getCategorias, createCategoria, updateCategoria, deleteCategoria } from '../services/categoriaService';
 import CategoriaTreeView from '../components/ui/CategoriaTreeView';
 import { Toggle } from '../components/ui/Toggle';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
@@ -47,9 +47,11 @@ const CategoriasPage = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categorias'] }),
   });
 
-  const toggleEstadoMutation = useMutation({
-    mutationFn: toggleEstadoCategoria,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categorias'] }),
+  const deleteMutation = useMutation({
+    mutationFn: deleteCategoria,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categorias'] });
+    },
   });
 
   const parentOptions = useMemo(() => {
@@ -117,6 +119,7 @@ const CategoriasPage = () => {
       </QueryStateWrapper>
 
       <GenericWizardForm<CategoriaCreate>
+        key={isModalOpen ? (selectedItem?.id ?? 'create-open') : 'closed'}
         isOpen={isModalOpen}
         onClose={closeModal}
         title={modalMode === 'create' ? 'Crear Categoría' : selectedItem?.nombre || 'Detalles'}
@@ -135,7 +138,7 @@ const CategoriasPage = () => {
                 if (!selectedItem.deleted_at) {
                   setCategoriaToDelete(selectedItem);
                 } else {
-                  toggleEstadoMutation.mutate(selectedItem.id);
+                  // Assuming re-activation is needed or handled via update if not delete
                   setSelectedItem({ ...selectedItem, deleted_at: null });
                 }
               }}
@@ -157,7 +160,7 @@ const CategoriasPage = () => {
         isOpen={!!categoriaToDelete}
         onClose={() => setCategoriaToDelete(null)}
         onConfirm={() => {
-          toggleEstadoMutation.mutate(categoriaToDelete?.id);
+          deleteMutation.mutate(categoriaToDelete?.id);
           setSelectedItem({ ...categoriaToDelete, deleted_at: new Date().toISOString() });
           setCategoriaToDelete(null);
         }}

@@ -19,9 +19,7 @@ import RelacionesStep from './RelacionesStep';
 import { getIngredientes } from '../../services/ingredienteService';
 import { getCategorias } from '../../services/categoriaService';
 import { getProducto } from '../../services/productoService';
-import type { ProductoCreate, ProductoUpdate } from '../../types/producto';
-import type { ProductoCategoriaCreate } from '../../types/productoCategoria';
-import type { ProductoIngredienteCreate } from '../../types/productoIngrediente';
+import type { ProductoCreate, ProductoUpdate, ProductoIngredientePayload } from '../../types/producto';
 
 interface ProductoFormModalProps {
   isOpen: boolean;
@@ -57,15 +55,14 @@ const ProductoFormModal = ({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Campos base
-  const [nombre, setNombre] = useState(defaultValues?.nombre ?? '');
-  const [descripcion, setDescripcion] = useState(defaultValues?.descripcion ?? '');
-  const [imagenUrl, setImagenUrl] = useState(defaultValues?.imagen_url ?? '');
-  const [precioBase, setPrecioBase] = useState(String(defaultValues?.precio_base ?? ''));
+  const [name, setName] = useState(defaultValues?.name ?? '');
+  const [price, setPrice] = useState(String(defaultValues?.price ?? ''));
   const [stockCantidad, setStockCantidad] = useState(String(defaultValues?.stock_cantidad ?? ''));
   const [disponible, setDisponible] = useState(defaultValues?.disponible ?? true);
+  const [unidadVentaId, setUnidadVentaId] = useState(String(defaultValues?.unidad_venta_id ?? '6'));
 
-  const [selectedCategorias, setSelectedCategorias] = useState<ProductoCategoriaCreate[]>([]);
-  const [selectedIngredientes, setSelectedIngredientes] = useState<ProductoIngredienteCreate[]>([]);
+  const [selectedCategorias, setSelectedCategorias] = useState<number[]>([]);
+  const [selectedIngredientes, setSelectedIngredientes] = useState<ProductoIngredientePayload[]>([]);
 
   // Al editar: cargar el detalle completo para obtener las relaciones
   // (la lista no incluye categorias/ingredientes)
@@ -76,18 +73,18 @@ const ProductoFormModal = ({
     staleTime: 0, // siempre buscar datos frescos al abrir el modal
   });
 
+
   useEffect(() => {
     if (!productoDetalle) return;
     setSelectedCategorias(
-      productoDetalle.categorias.map((c: any) => ({
-        categoria_id: c.id ?? c.categoria_id,
-        es_principal: c.es_principal,
-      }))
+      productoDetalle.categorias.map((c: any) => c.categoria_id)
     );
     setSelectedIngredientes(
       productoDetalle.ingredientes.map((i: any) => ({
         ingrediente_id: i.ingrediente_id,
-        es_removible: i.es_removible,
+        cantidad: i.cantidad ?? 1,
+        unidad_medida_id: i.unidad_medida_id ?? 1,
+        es_removible: i.es_removible ?? true
       }))
     );
   }, [productoDetalle]);
@@ -108,37 +105,43 @@ const ProductoFormModal = ({
   const handleClose = () => {
     setStep(0);
     setSubmitError(null);
+    setName(defaultValues?.name ?? '');
+    setPrice(String(defaultValues?.price ?? ''));
+    setStockCantidad(String(defaultValues?.stock_cantidad ?? ''));
+    setDisponible(defaultValues?.disponible ?? true);
+    setUnidadVentaId(String(defaultValues?.unidad_venta_id ?? '6'));
+    if (!defaultValues?.id) {
+      setSelectedCategorias([]);
+      setSelectedIngredientes([]);
+    }
     onClose();
   };
 
   const handleSubmit = async () => {
     setSubmitError(null);
     const payload: ProductoCreate = {
-      nombre,
-      descripcion: descripcion || null,
-      imagen_url: imagenUrl || null,
-      precio_base: parseFloat(precioBase) || 0,
+      name,
+      price: parseFloat(price) || 0,
       stock_cantidad: parseInt(stockCantidad) || 0,
       disponible,
       categorias: selectedCategorias,
       ingredientes: selectedIngredientes,
+      unidad_venta_id: parseInt(unidadVentaId) || 1,
     };
     try {
       await onSubmit(payload);
       setStep(0);
     } catch (err: any) {
-      const detail = err?.response?.data?.detail;
-      setSubmitError(
-        typeof detail === 'string'
-          ? detail
-          : 'No se pudo guardar el producto. Verificá tu conexión y volvé a intentarlo.'
-      );
+      setSubmitError(err.message || 'No se pudo guardar el producto. Verificá tu conexión y volvé a intentarlo.');
     }
   };
 
   const canProceed = () => {
-    if (step === 0) return nombre.trim().length >= 2;
-    if (step === 1) return parseFloat(precioBase) >= 0 && parseInt(stockCantidad) >= 0;
+    if (step === 0) return name.trim().length >= 2;
+    if (step === 1) return !isNaN(parseFloat(price)) && parseFloat(price) >= 0 && 
+                           !isNaN(parseInt(stockCantidad)) && parseInt(stockCantidad) >= 0 &&
+                           !isNaN(parseInt(unidadVentaId)) && parseInt(unidadVentaId) > 0;
+    if (step === 2) return selectedCategorias.length > 0 && selectedIngredientes.every(i => i.cantidad > 0);
     return true;
   };
 
@@ -176,7 +179,7 @@ const ProductoFormModal = ({
             Siguiente →
           </Button>
         ) : (
-          <Button type="button" onClick={handleSubmit} isLoading={isSubmitting} disabled={isSubmitting}>
+          <Button type="button" onClick={handleSubmit} isLoading={isSubmitting} disabled={isSubmitting || !canProceed()}>
             {submitError ? 'Reintentar' : 'Guardar'}
           </Button>
         )}
@@ -219,25 +222,8 @@ const ProductoFormModal = ({
               <label className="text-xs font-semibold text-text mb-0.5 block">
                 Nombre <span className="text-danger">*</span>
               </label>
-              <Input value={nombre} onChange={e => setNombre(e.target.value)}
+              <Input value={name} onChange={e => setName(e.target.value)}
                 placeholder="Ej: Hamburguesa Doble" disabled={isViewMode} />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-text mb-0.5 block">Descripción</label>
-                <textarea
-                  value={descripcion as string}
-                  onChange={e => setDescripcion(e.target.value)}
-                  placeholder="Ej: Doble carne, cheddar..."
-                  disabled={isViewMode}
-                  className={`w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none min-h-[70px] ${isViewMode ? 'opacity-70' : ''}`}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-text mb-0.5 block">URL de Imagen</label>
-                <Input value={imagenUrl as string} onChange={e => setImagenUrl(e.target.value)}
-                  placeholder="https://..." disabled={isViewMode} />
-              </div>
             </div>
           </div>
         )}
@@ -245,12 +231,12 @@ const ProductoFormModal = ({
         {/* Paso 1 */}
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
               <div>
                 <label className="text-xs font-semibold text-text mb-0.5 block">
                   Precio Base ($) <span className="text-danger">*</span>
                 </label>
-                <Input type="number" value={precioBase} onChange={e => setPrecioBase(e.target.value)}
+                <Input type="number" value={price} onChange={e => setPrice(e.target.value)}
                   placeholder="0.00" min={0} step="0.01" disabled={isViewMode} />
               </div>
               <div>
@@ -259,6 +245,25 @@ const ProductoFormModal = ({
                 </label>
                 <Input type="number" value={stockCantidad} onChange={e => setStockCantidad(e.target.value)}
                   placeholder="0" min={0} step="1" disabled={isViewMode} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-text mb-0.5 block">
+                  Unidad de Venta <span className="text-danger">*</span>
+                </label>
+                <select
+                  value={unidadVentaId}
+                  onChange={e => setUnidadVentaId(e.target.value)}
+                  disabled={isViewMode}
+                  className={`w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-text focus:outline-none focus:ring-1 focus:ring-primary/30 appearance-none ${isViewMode ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  <option value="" disabled>Seleccionar...</option>
+                  <option value="1">Gramo (g)</option>
+                  <option value="2">Kilogramo (kg)</option>
+                  <option value="3">Mililitro (ml)</option>
+                  <option value="4">Litro (l)</option>
+                  <option value="5">Docena (doc)</option>
+                  <option value="6">Unidad (un)</option>
+                </select>
               </div>
             </div>
             <label className={`flex items-center gap-2 px-3 py-2 border border-border bg-surface-2/30 rounded-xl
@@ -284,6 +289,11 @@ const ProductoFormModal = ({
               onIngredientesChange={setSelectedIngredientes}
               isViewMode={isViewMode}
             />
+            {selectedCategorias.length === 0 && !isViewMode && (
+              <div className="mt-4 p-3 bg-danger/10 border border-danger/20 rounded-xl text-center">
+                <p className="text-xs text-danger font-medium">⚠️ Debes seleccionar al menos una categoría para poder guardar.</p>
+              </div>
+            )}
           </div>
         )}
       </div>

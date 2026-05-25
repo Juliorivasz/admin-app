@@ -3,11 +3,9 @@
 // ==========================================
 
 export interface IngredienteBase {
-  nombre: string;
-  descripcion?: string | null;
-  es_alergeno: boolean;
-  cantidad: number;
-  unidad_medida: string;
+  name: string;
+  description: string;
+  esAlergeno: boolean;
 }
 
 export interface Ingrediente extends IngredienteBase {

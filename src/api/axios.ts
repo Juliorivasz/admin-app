@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type AxiosResponse } from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_API_URL,
+  baseURL: 'http://localhost:8000', // El backend local no usa /api/v1
   headers: {
     'Content-Type': 'application/json',
   },
@@ -51,8 +51,12 @@ api.interceptors.response.use(
     // Aquí podríamos disparar una notificación global
     // toast.error(errorMessage);
 
-    // Rechazamos con el mensaje simplificado para que los componentes lo usen
-    return Promise.reject(new Error(errorMessage));
+    // Rechazamos con un error que incluya el status HTTP
+    const customError = new Error(errorMessage) as any;
+    if (error.response) {
+      customError.status = error.response.status;
+    }
+    return Promise.reject(customError);
   }
 );
 
