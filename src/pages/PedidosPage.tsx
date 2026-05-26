@@ -1,90 +1,82 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Filter, RotateCw } from 'lucide-react';
 import Button from '../components/ui/Button';
 import StatusBadge from '../components/ui/StatusBadge';
+import { getPedidos, updateEstadoPedido } from '../services/pedidoService';
 
-type OrderStatus = 'pendiente' | 'en_preparacion' | 'listo' | 'entregado';
+type OrderStatus = 'PENDIENTE' | 'CONFIRMADO' | 'EN_PREPARACION' | 'LISTO' | 'ENTREGADO' | 'CANCELADO';
 
 interface OrderItem {
-  id: string;
-  qty: number;
-  name: string;
-  price: number;
-  ready?: boolean;
+  id?: number;
+  producto_id?: number;
+  cantidad: number;
+  nombre_snapshot: string;
+  precio_snapshot: number;
 }
 
 interface Order {
-  id: string;
-  orderNumber: string;
-  title: string;
-  status: OrderStatus;
-  items: OrderItem[];
+  id: number;
+  nombre_cliente: string;
+  estado_codigo: OrderStatus;
+  detalles_pedido: OrderItem[];
   total: number;
+  created_at: string;
 }
 
-const INITIAL_MOCK_ORDERS: Order[] = [
-  {
-    id: '1',
-    orderNumber: '1042',
-    title: 'Mesa 4',
-    status: 'pendiente',
-    items: [
-      { id: 'i1', qty: 2, name: 'Pizza Margarita', price: 25.00 },
-      { id: 'i2', qty: 1, name: 'Refresco Cola', price: 3.50 },
-      { id: 'i3', qty: 1, name: 'Ensalada César', price: 8.50 },
-    ],
-    total: 37.00,
-  },
-  {
-    id: '2',
-    orderNumber: '1041',
-    title: 'Para llevar',
-    status: 'en_preparacion',
-    items: [
-      { id: 'i4', qty: 1, name: 'Hamburguesa Clásica', price: 9.00, ready: true },
-      { id: 'i5', qty: 1, name: 'Patatas Fritas', price: 6.00 },
-    ],
-    total: 15.00,
-  },
-  {
-    id: '3',
-    orderNumber: '1040',
-    title: 'Mesa 12',
-    status: 'listo',
-    items: [
-      { id: 'i6', qty: 3, name: 'Tacos al Pastor', price: 21.00 },
-      { id: 'i7', qty: 2, name: 'Cerveza Artesanal', price: 7.00 },
-    ],
-    total: 28.00,
-  },
-  {
-    id: '4',
-    orderNumber: '1039',
-    title: 'Mesa 2',
-    status: 'entregado',
-    items: [
-      { id: 'i8', qty: 1, name: 'Sopa del Día', price: 8.00 },
-      { id: 'i9', qty: 1, name: 'Agua Mineral', price: 4.00 },
-    ],
-    total: 12.00,
-  },
-];
-
 const PedidosPage = () => {
-  const [orders, setOrders] = useState<Order[]>(INITIAL_MOCK_ORDERS);
+  const queryClient = useQueryClient();
 
-  // Derivar columnas (Kanban)
+  const { data: pedidosResponse, isLoading, isError, refetch } = useQuery({
+    queryKey: ['pedidos'],
+    queryFn: getPedidos,
+  });
+
+  const updateEstadoMutation = useMutation({
+    mutationFn: updateEstadoPedido,
+    onSuccess: () => {
+      // Invalida la caché para recargar inmediatamente la lista
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] });
+    },
+  });
+
+  // Extract array of orders from Axios response
+  const orders: Order[] = useMemo(() => {
+    if (!pedidosResponse) return [];
+    if (Array.isArray(pedidosResponse)) return pedidosResponse;
+    if (Array.isArray((pedidosResponse as any).data)) return (pedidosResponse as any).data;
+    return [];
+  }, [pedidosResponse]);
+
+  // Derivar columnas (Kanban) con estados reales del backend
   const columns = useMemo(() => {
     return {
-      entrantes: orders.filter(o => o.status === 'pendiente'),
-      preparacion: orders.filter(o => o.status === 'en_preparacion' || o.status === 'listo'),
-      entregados: orders.filter(o => o.status === 'entregado'),
+      entrantes: orders.filter(o => o.estado_codigo === 'PENDIENTE' || o.estado_codigo === 'CONFIRMADO'),
+      preparacion: orders.filter(o => o.estado_codigo === 'EN_PREPARACION' || o.estado_codigo === 'LISTO'),
+      entregados: orders.filter(o => o.estado_codigo === 'ENTREGADO'),
     };
   }, [orders]);
 
-  const changeOrderStatus = (id: string, newStatus: OrderStatus) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+  const changeOrderStatus = (id: number, newStatus: OrderStatus) => {
+    updateEstadoMutation.mutate({ id, estado_codigo: newStatus });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full flex-col gap-4">
+        <p className="text-red-400">Error al cargar los pedidos. Intenta nuevamente.</p>
+        <Button variant="secondary" onClick={() => refetch()}>Reintentar</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full space-y-6">
@@ -104,7 +96,7 @@ const PedidosPage = () => {
             <Filter className="w-4 h-4" />
             Filtros
           </Button>
-          <Button variant="primary" className="px-4 py-2 text-[13px]">
+          <Button variant="primary" className="px-4 py-2 text-[13px]" onClick={() => refetch()}>
             <RotateCw className="w-4 h-4" />
             Actualizar
           </Button>
@@ -118,7 +110,7 @@ const PedidosPage = () => {
         <div className="flex flex-col h-full bg-[#1A1A24]/0 rounded-xl border-border/0">
           <div className="flex items-center justify-between px-2 pb-4 pt-1 shrink-0">
             <span className="text-[12px] font-semibold tracking-wider text-text-muted uppercase">
-              Entrantes / Aceptados
+              Pendientes / Confirmados
             </span>
             <span className="bg-surface-2 text-text-muted px-2 py-0.5 rounded-md text-[11px] font-medium">
               {columns.entrantes.length}
@@ -126,7 +118,12 @@ const PedidosPage = () => {
           </div>
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             {columns.entrantes.map(order => (
-              <PedidoCard key={order.id} order={order} onChangeStatus={changeOrderStatus} />
+              <PedidoCard 
+                key={order.id} 
+                order={order} 
+                onChangeStatus={changeOrderStatus} 
+                isLoading={updateEstadoMutation.isPending && updateEstadoMutation.variables?.id === order.id}
+              />
             ))}
           </div>
         </div>
@@ -143,7 +140,12 @@ const PedidosPage = () => {
           </div>
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             {columns.preparacion.map(order => (
-              <PedidoCard key={order.id} order={order} onChangeStatus={changeOrderStatus} />
+              <PedidoCard 
+                key={order.id} 
+                order={order} 
+                onChangeStatus={changeOrderStatus}
+                isLoading={updateEstadoMutation.isPending && updateEstadoMutation.variables?.id === order.id}
+              />
             ))}
           </div>
         </div>
@@ -152,7 +154,7 @@ const PedidosPage = () => {
         <div className="flex flex-col h-full bg-[#1A1A24]/0 rounded-xl border-border/0">
           <div className="flex items-center justify-between px-2 pb-4 pt-1 shrink-0">
             <span className="text-[12px] font-semibold tracking-wider text-text-muted uppercase">
-              Entregados / Retirados
+              Entregados
             </span>
             <span className="bg-surface-2 text-text-muted px-2 py-0.5 rounded-md text-[11px] font-medium">
               {columns.entregados.length}
@@ -160,7 +162,12 @@ const PedidosPage = () => {
           </div>
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             {columns.entregados.map(order => (
-              <PedidoCard key={order.id} order={order} onChangeStatus={changeOrderStatus} />
+              <PedidoCard 
+                key={order.id} 
+                order={order} 
+                onChangeStatus={changeOrderStatus}
+                isLoading={updateEstadoMutation.isPending && updateEstadoMutation.variables?.id === order.id}
+              />
             ))}
           </div>
         </div>
@@ -173,22 +180,33 @@ const PedidosPage = () => {
 
 /* ── Componente Interno: Tarjeta de Pedido ── */
 
-const PedidoCard = ({ order, onChangeStatus }: { order: Order, onChangeStatus: (id: string, s: OrderStatus) => void }) => {
+const PedidoCard = ({ 
+  order, 
+  onChangeStatus,
+  isLoading 
+}: { 
+  order: Order, 
+  onChangeStatus: (id: number, s: OrderStatus) => void,
+  isLoading: boolean
+}) => {
   
-  // Derivar opacidad si está entregado
-  const isEntregado = order.status === 'entregado';
-  const cardOpacity = isEntregado ? 'opacity-60' : 'opacity-100';
+  const isEntregado = order.estado_codigo === 'ENTREGADO';
+  const isCancelado = order.estado_codigo === 'CANCELADO';
+  const cardOpacity = (isEntregado || isCancelado) ? 'opacity-60' : 'opacity-100';
 
-  // Configuración del badge según el estado
   const getBadgeVariant = () => {
-    switch (order.status) {
-      case 'pendiente': return 'pedido-pendiente';
-      case 'en_preparacion': return 'pedido-preparacion';
-      case 'listo': return 'pedido-listo';
-      case 'entregado': return 'pedido-entregado';
+    switch (order.estado_codigo) {
+      case 'PENDIENTE': return 'pedido-pendiente';
+      case 'CONFIRMADO': return 'pedido-preparacion'; // Usamos color azulado
+      case 'EN_PREPARACION': return 'pedido-preparacion';
+      case 'LISTO': return 'pedido-listo';
+      case 'ENTREGADO': return 'pedido-entregado';
+      case 'CANCELADO': return 'inactivo';
       default: return 'pedido-pendiente';
     }
   };
+
+  const nombreMostrar = order.nombre_cliente || `Usuario #${order.id}`;
 
   return (
     <div className={`bg-surface border border-border rounded-xl p-5 flex flex-col gap-4 transition-opacity duration-300 hover:border-[#3E4260] ${cardOpacity}`}>
@@ -197,10 +215,10 @@ const PedidoCard = ({ order, onChangeStatus }: { order: Order, onChangeStatus: (
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-0.5">
           <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
-            Orden #{order.orderNumber}
+            Orden #{order.id}
           </span>
           <span className="text-[17px] font-semibold text-text tracking-tight mt-1">
-            {order.title}
+            {nombreMostrar}
           </span>
         </div>
         <StatusBadge variant={getBadgeVariant()} />
@@ -208,45 +226,54 @@ const PedidoCard = ({ order, onChangeStatus }: { order: Order, onChangeStatus: (
 
       {/* Lista de Items */}
       <div className="bg-[#191A23] rounded-lg p-3.5 space-y-2.5">
-        {order.items.map(item => (
-          <div key={item.id} className="flex justify-between items-start">
-            <span className={`text-[13px] ${item.ready || isEntregado ? 'text-text-muted line-through' : 'text-text-muted/90'}`}>
-              {item.qty}x {item.name}
-            </span>
-            <span className="text-[13px] font-medium text-text-muted">
-              ${item.price.toFixed(2)}
-            </span>
-          </div>
-        ))}
+        {order.detalles_pedido && order.detalles_pedido.length > 0 ? (
+          order.detalles_pedido.map((item, index) => (
+            <div key={item.id || item.producto_id || index} className="flex justify-between items-start">
+              <span className={`text-[13px] ${isEntregado ? 'text-text-muted line-through' : 'text-text-muted/90'}`}>
+                {item.cantidad}x {item.nombre_snapshot}
+              </span>
+              <span className="text-[13px] font-medium text-text-muted">
+                ${item.precio_snapshot.toFixed(2)}
+              </span>
+            </div>
+          ))
+        ) : (
+          <span className="text-[13px] text-text-muted/70">Sin detalles de productos</span>
+        )}
         
         {/* Total Divider */}
         <div className="pt-2.5 mt-1 border-t border-[#2A2B3D] flex justify-between items-center">
           <span className="text-[14px] font-semibold text-text">Total</span>
-          <span className="text-[15px] font-bold text-blue-300/90">${order.total.toFixed(2)}</span>
+          <span className="text-[15px] font-bold text-blue-300/90">${(order.total || 0).toFixed(2)}</span>
         </div>
       </div>
 
-      {/* Botones de Acción (Si no está entregado) */}
-      {!isEntregado && (
+      {/* Botones de Acción (Si no está entregado ni cancelado) */}
+      {!isEntregado && !isCancelado && (
         <div className="flex gap-2 pt-1">
-          {order.status === 'pendiente' && (
+          {order.estado_codigo === 'PENDIENTE' && (
             <>
-              <Button variant="secondary" className="flex-1 text-[13px] py-2 h-9" onClick={() => {/* Lógica cancelar */}}>
+              <Button disabled={isLoading} variant="secondary" className="flex-1 text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'CANCELADO')}>
                 Cancelar
               </Button>
-              <Button variant="warning" className="flex-1 text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'en_preparacion')}>
-                En preparación
+              <Button disabled={isLoading} variant="primary" className="flex-1 text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'CONFIRMADO')}>
+                Confirmar
               </Button>
             </>
           )}
-          {order.status === 'en_preparacion' && (
-            <Button variant="primary" className="w-full text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'listo')}>
-              Listo
+          {order.estado_codigo === 'CONFIRMADO' && (
+            <Button disabled={isLoading} variant="warning" className="w-full text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'EN_PREPARACION')}>
+              {isLoading ? '...' : 'Pasar a Preparación'}
             </Button>
           )}
-          {order.status === 'listo' && (
-            <Button variant="success" className="w-full text-[13px] py-2 h-9 text-green-950 font-bold" onClick={() => onChangeStatus(order.id, 'entregado')}>
-              Entregado
+          {order.estado_codigo === 'EN_PREPARACION' && (
+            <Button disabled={isLoading} variant="primary" className="w-full text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'LISTO')}>
+              {isLoading ? '...' : 'Listo'}
+            </Button>
+          )}
+          {order.estado_codigo === 'LISTO' && (
+            <Button disabled={isLoading} variant="success" className="w-full text-[13px] py-2 h-9 text-green-950 font-bold" onClick={() => onChangeStatus(order.id, 'ENTREGADO')}>
+              {isLoading ? '...' : 'Entregado'}
             </Button>
           )}
         </div>

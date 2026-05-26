@@ -1,17 +1,3 @@
-/**
- * RoleRoute.tsx
- *
- * Guard para rutas que requieren un rol específico.
- * Si el usuario no tiene el rol requerido → redirige a /unauthorized (403).
- *
- * Uso:
- *   <RoleRoute roles={['admin', 'manager']}>
- *     <MiPagina />
- *   </RoleRoute>
- *
- * Cuando implementes el sistema de auth real, reemplaza `useAuthUser()`
- * con tu hook que exponga el rol del usuario autenticado.
- */
 import { Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import type { UserRole } from './routes';
@@ -21,22 +7,22 @@ interface RoleRouteProps {
   children: ReactNode;
 }
 
-/**
- * Hook placeholder — reemplazar con el hook real que devuelva el rol del usuario.
- * Mientras no haya sistema de auth, siempre devuelve rol 'admin'
- * para no bloquear el desarrollo.
- */
-const useAuthUser = () => {
-  // TODO: obtener el rol real desde el contexto de auth / JWT claims
-  return { role: 'ADMIN' as UserRole };
-};
+import { useAuth } from '../contexts/AuthContext';
 
 const RoleRoute = ({ roles, children }: RoleRouteProps) => {
-  const { role } = useAuthUser();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div className="h-screen flex items-center justify-center text-text-muted">Verificando permisos...</div>;
+  }
 
   // Si no hay roles definidos para la ruta, cualquier usuario autenticado puede acceder
-  if (roles.length > 0 && !roles.includes(role)) {
-    return <Navigate to="/unauthorized" replace />;
+  if (roles.length > 0) {
+    // Verificar si el usuario tiene al menos uno de los roles requeridos
+    const hasRole = user?.roles?.some(role => roles.includes(role as UserRole));
+    if (!hasRole) {
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   return <>{children}</>;

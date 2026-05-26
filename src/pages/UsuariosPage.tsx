@@ -26,6 +26,7 @@ const UsuariosPage = () => {
 
   const filteredData = useMemo(() => {
     let data = Array.isArray(usuarios) ? usuarios : [];
+
     if (searchText) {
       data = data.filter((u: any) => 
         u.name?.toLowerCase().includes(searchText.toLowerCase()) || 
@@ -90,8 +91,9 @@ const UsuariosPage = () => {
             {roles.map(rol => {
               let color = 'bg-gray-500/20 text-gray-300';
               if (rol === 'ADMIN') color = 'bg-red-500/20 text-red-400';
-              if (rol === 'COCINERO') color = 'bg-blue-500/20 text-blue-400';
-              if (rol === 'CLIENTE') color = 'bg-amber-500/20 text-amber-400';
+              if (rol === 'PEDIDOS') color = 'bg-blue-500/20 text-blue-400';
+              if (rol === 'STOCK') color = 'bg-purple-500/20 text-purple-400';
+              if (rol === 'CLIENT') color = 'bg-amber-500/20 text-amber-400';
               
               return (
                 <span key={rol} className={`px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wider ${color}`}>
@@ -115,10 +117,9 @@ const UsuariosPage = () => {
     { name: 'lastname', label: 'Apellido', type: 'text', step: 0, required: true },
     { name: 'email', label: 'Correo Electrónico', type: 'text', step: 0, required: true },
     { name: 'phone_number', label: 'Celular (Opcional)', type: 'number', step: 0 },
-    // Checkboxes de roles basados en la DB (Seed)
     { name: 'esAdmin', label: 'Administrador (Control Total)', type: 'checkbox', step: 0 },
-    { name: 'esCocinero', label: 'Cocinero (Gestiona cocina)', type: 'checkbox', step: 0, hidden: (values: any) => values.esAdmin },
-    { name: 'esCliente', label: 'Cliente', type: 'checkbox', step: 0, hidden: (values: any) => values.esAdmin },
+    { name: 'esPedidos', label: 'Encargado de Pedidos', type: 'checkbox', step: 0, hidden: (values: any) => values.esAdmin },
+    { name: 'esStock', label: 'Encargado de Stock', type: 'checkbox', step: 0, hidden: (values: any) => values.esAdmin },
   ];
 
   if (modalMode === 'create') {
@@ -127,16 +128,15 @@ const UsuariosPage = () => {
 
   const closeModal = () => { setIsModalOpen(false); setSelectedItem(null); setModalMode('create'); };
 
-  // Mapeamos los roles reales a los booleanos del formulario cuando se edita o ve
   const getFormValues = () => {
     if (!selectedItem) {
-      return { name: '', lastname: '', email: '', phone_number: '', password_hash: '', esAdmin: false, esCocinero: false, esCliente: false };
+      return { name: '', lastname: '', email: '', phone_number: '', password_hash: '', esAdmin: false, esPedidos: false, esStock: false, esClient: false };
     }
     return {
       ...selectedItem,
       esAdmin: selectedItem.roles?.includes('ADMIN') || false,
-      esCocinero: selectedItem.roles?.includes('COCINERO') || false,
-      esCliente: selectedItem.roles?.includes('CLIENTE') || false,
+      esPedidos: selectedItem.roles?.includes('PEDIDOS') || false,
+      esStock: selectedItem.roles?.includes('STOCK') || false,
     };
   };
 
@@ -163,8 +163,8 @@ const UsuariosPage = () => {
         >
           <option value="">Roles: Todos</option>
           <option value="ADMIN">Administradores</option>
-          <option value="COCINERO">Cocinero</option>
-          <option value="CLIENTE">Clientes</option>
+          <option value="PEDIDOS">Encargado Pedidos</option>
+          <option value="STOCK">Encargado Stock</option>
         </select>
       </FilterBar>
 
@@ -187,13 +187,12 @@ const UsuariosPage = () => {
         isViewMode={modalMode === 'view'}
         onEnableEdit={() => setModalMode('edit')}
         onSubmit={async (values) => {
-          // Extraemos los checkboxes y construimos el array de roles (Aunque el back actual lo ignora)
           const roles = [];
           if (values.esAdmin) {
-            roles.push('ADMIN'); // Si es admin, ignoramos por completo las otras opciones
+            roles.push('ADMIN');
           } else {
-            if (values.esCocinero) roles.push('COCINERO');
-            if (values.esCliente) roles.push('CLIENTE');
+            if (values.esPedidos) roles.push('PEDIDOS');
+            if (values.esStock) roles.push('STOCK');
           }
           
           const finalData = {
@@ -202,8 +201,8 @@ const UsuariosPage = () => {
             phone_number: values.phone_number ? parseInt(values.phone_number) : null
           };
           delete finalData.esAdmin;
-          delete finalData.esCocinero;
-          delete finalData.esCliente;
+          delete finalData.esPedidos;
+          delete finalData.esStock;
 
           if (modalMode === 'edit' && selectedItem) {
             await updateMutation.mutateAsync({ id: selectedItem.id, data: finalData });

@@ -1,17 +1,3 @@
-/**
- * PrivateRoute.tsx
- *
- * Guard para rutas que requieren autenticación.
- * Si el usuario no está logueado → redirige a /login.
- *
- * Uso:
- *   <PrivateRoute>
- *     <MiPagina />
- *   </PrivateRoute>
- *
- * Cuando implementes el sistema de auth real, reemplaza `useAuth()`
- * con tu hook de sesión (JWT, cookie, context, etc.).
- */
 import { Navigate, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
@@ -19,19 +5,15 @@ interface PrivateRouteProps {
   children: ReactNode;
 }
 
-/**
- * Hook placeholder — reemplazar con el hook real de autenticación.
- * Mientras no haya sistema de auth, siempre devuelve isAuthenticated: true
- * para no bloquear el desarrollo.
- */
-const useAuth = () => {
-  // TODO: implementar con contexto de auth real (JWT / cookie / Zustand / etc.)
-  return { isAuthenticated: true };
-};
+import { useAuth } from '../contexts/AuthContext';
 
 const PrivateRoute = ({ children }: PrivateRouteProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+
+  if (isLoading) {
+    return <div className="h-screen flex items-center justify-center text-text-muted">Cargando sesión...</div>;
+  }
 
   if (!isAuthenticated) {
     // Guarda la ruta intentada para redirigir después del login

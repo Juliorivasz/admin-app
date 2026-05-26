@@ -59,7 +59,7 @@ const ProductoFormModal = ({
   const [price, setPrice] = useState(String(defaultValues?.price ?? ''));
   const [stockCantidad, setStockCantidad] = useState(String(defaultValues?.stock_cantidad ?? ''));
   const [disponible, setDisponible] = useState(defaultValues?.disponible ?? true);
-  const [unidadVentaId, setUnidadVentaId] = useState(String(defaultValues?.unidad_venta_id ?? '6'));
+  const [unidadVentaId, setUnidadVentaId] = useState(String(defaultValues?.unidad_venta_id ?? defaultValues?.unidad_medida_id ?? '6'));
 
   const [selectedCategorias, setSelectedCategorias] = useState<number[]>([]);
   const [selectedIngredientes, setSelectedIngredientes] = useState<ProductoIngredientePayload[]>([]);
@@ -109,7 +109,7 @@ const ProductoFormModal = ({
     setPrice(String(defaultValues?.price ?? ''));
     setStockCantidad(String(defaultValues?.stock_cantidad ?? ''));
     setDisponible(defaultValues?.disponible ?? true);
-    setUnidadVentaId(String(defaultValues?.unidad_venta_id ?? '6'));
+    setUnidadVentaId(String(defaultValues?.unidad_venta_id ?? defaultValues?.unidad_medida_id ?? '6'));
     if (!defaultValues?.id) {
       setSelectedCategorias([]);
       setSelectedIngredientes([]);
@@ -119,14 +119,14 @@ const ProductoFormModal = ({
 
   const handleSubmit = async () => {
     setSubmitError(null);
-    const payload: ProductoCreate = {
+    const payload: any = {
       name,
       price: parseFloat(price) || 0,
       stock_cantidad: parseInt(stockCantidad) || 0,
       disponible,
       categorias: selectedCategorias,
-      ingredientes: selectedIngredientes,
-      unidad_venta_id: parseInt(unidadVentaId) || 1,
+      ingredientes: selectedIngredientes.map(i => i.ingrediente_id),
+      unidad_medida_id: parseInt(unidadVentaId) || 1,
     };
     try {
       await onSubmit(payload);

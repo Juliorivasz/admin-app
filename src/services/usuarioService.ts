@@ -1,7 +1,7 @@
 import api from '../api/axios';
 
 export const getUsuarios = async () => {
-  return api.get('/usuarios/');
+  return api.get('/usuarios/?exclude_role=CLIENT');
 };
 
 export const getUsuarioById = async (id: number) => {

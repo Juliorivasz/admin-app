@@ -3,22 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import Button from '../components/ui/Button';
 
+import { useAuth } from '../contexts/AuthContext';
+import { AxiosError } from 'axios';
+
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // Simulación de Auth
-    setTimeout(() => {
-      setIsLoading(false);
-      // Redirigir al inicio (Dashboard) una vez que el login sea exitoso
+    try {
+      console.log('Iniciando petición al backend...');
+      await login({ email, password });
+      console.log('Petición exitosa, navegando a / ...');
       navigate('/');
-    }, 1000);
+    } catch (err: any) {
+      console.error('Error capturado en el login:', err);
+      if (err.message) {
+        setError(err.message);
+      } else {
+        setError('Ocurrió un error al iniciar sesión');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -42,6 +57,12 @@ const LoginPage = () => {
             Ingresa tus credenciales para acceder al panel de control.
           </p>
         </div>
+
+        {error && (
+          <div className="mx-8 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="px-8 pb-10 space-y-5">

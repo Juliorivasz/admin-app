@@ -2,6 +2,7 @@ import axios, { type AxiosError, type AxiosResponse } from 'axios';
 
 const api = axios.create({
   baseURL: 'http://localhost:8000', // El backend local no usa /api/v1
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -1,16 +1,3 @@
-/**
- * AppRouter.tsx
- *
- * Orquestador central del sistema de rutas.
- * Lee la configuración de routes.tsx y aplica automáticamente:
- *   - React.Suspense con spinner para rutas con lazy loading
- *   - Layout principal (sidebar + header)
- *   - PrivateRoute (guard de autenticación)
- *   - RoleRoute (guard de roles)
- *
- * Para agregar una nueva ruta: solo editar routes.tsx.
- * Este archivo no necesita cambiar.
- */
 import { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/Layout';
