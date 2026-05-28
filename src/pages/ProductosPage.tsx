@@ -78,22 +78,25 @@ const ProductosPage = () => {
       id: 'imagen',
       header: 'Imagen',
       cell: (info) => {
-        // En una app real, aquí usaríamos info.row.original.imagen_url
-        // Por ahora simulamos si tiene imagen o es el placeholder gris
+        const url = info.row.original.imagen_url;
         const nombre = (info.row.original.name || '').toLowerCase();
-        const hasImage = nombre.includes('pizza') || nombre.includes('hamburguesa');
         
         return (
           <div className="w-10 h-10 rounded-md overflow-hidden bg-surface-2 border border-border flex items-center justify-center shrink-0">
-            {hasImage ? (
+            {url ? (
+              <img 
+                src={url} 
+                alt={info.row.original.name} 
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            ) : (
               <img 
                 src={`https://api.dicebear.com/7.x/shapes/svg?seed=${nombre}&backgroundColor=1D1E2C`} 
                 alt={info.row.original.name} 
                 className="w-full h-full object-cover opacity-80"
                 loading="lazy"
               />
-            ) : (
-              <div className="w-full h-full bg-[#252636]" />
             )}
           </div>
         );

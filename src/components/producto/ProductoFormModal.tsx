@@ -59,6 +59,7 @@ const ProductoFormModal = ({
   const [price, setPrice] = useState(String(defaultValues?.price ?? ''));
   const [stockCantidad, setStockCantidad] = useState(String(defaultValues?.stock_cantidad ?? ''));
   const [disponible, setDisponible] = useState(defaultValues?.disponible ?? true);
+  const [imagenUrl, setImagenUrl] = useState(defaultValues?.imagen_url ?? '');
   const [unidadVentaId, setUnidadVentaId] = useState(String(defaultValues?.unidad_venta_id ?? defaultValues?.unidad_medida_id ?? '6'));
 
   const [selectedCategorias, setSelectedCategorias] = useState<number[]>([]);
@@ -109,6 +110,7 @@ const ProductoFormModal = ({
     setPrice(String(defaultValues?.price ?? ''));
     setStockCantidad(String(defaultValues?.stock_cantidad ?? ''));
     setDisponible(defaultValues?.disponible ?? true);
+    setImagenUrl(defaultValues?.imagen_url ?? '');
     setUnidadVentaId(String(defaultValues?.unidad_venta_id ?? defaultValues?.unidad_medida_id ?? '6'));
     if (!defaultValues?.id) {
       setSelectedCategorias([]);
@@ -124,6 +126,7 @@ const ProductoFormModal = ({
       price: parseFloat(price) || 0,
       stock_cantidad: parseInt(stockCantidad) || 0,
       disponible,
+      imagen_url: imagenUrl || null,
       categorias: selectedCategorias,
       ingredientes: selectedIngredientes.map(i => i.ingrediente_id),
       unidad_medida_id: parseInt(unidadVentaId) || 1,
@@ -224,6 +227,13 @@ const ProductoFormModal = ({
               </label>
               <Input value={name} onChange={e => setName(e.target.value)}
                 placeholder="Ej: Hamburguesa Doble" disabled={isViewMode} />
+            </div>
+            <div className="mb-3">
+              <label className="text-xs font-semibold text-text mb-0.5 block">
+                URL de Imagen
+              </label>
+              <Input value={imagenUrl} onChange={e => setImagenUrl(e.target.value)}
+                placeholder="https://ejemplo.com/imagen.jpg" disabled={isViewMode} />
             </div>
           </div>
         )}

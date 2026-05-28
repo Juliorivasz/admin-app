@@ -75,7 +75,7 @@ const ProductoDetallePage = () => {
     );
   }
 
-  const categoriaPrincipal = producto.categorias.find(c => c.es_principal);
+  const categoriaPrincipal = producto.categorias.find(c => c.es_principal)?.categoria;
 
   return (
     <div className="space-y-6">
@@ -119,8 +119,8 @@ const ProductoDetallePage = () => {
               <ul className="space-y-1">
                 {producto.ingredientes.map((ing: any) => (
                   <RelacionItemRow key={ing.ingrediente_id || ing} onRemove={() => handleRemoveIngrediente(ing.ingrediente_id || ing)} isPending={updateMutation.isPending}>
-                    <span className="font-medium text-text">{ing.name || ing.nombre}</span>
-                    {ing.esAlergeno && <StatusBadge variant="alergeno" />}
+                    <span className="font-medium text-text">{ing.ingrediente?.name || ing.name || ing.nombre}</span>
+                    {(ing.ingrediente?.esAlergeno || ing.esAlergeno) && <StatusBadge variant="alergeno" />}
                   </RelacionItemRow>
                 ))}
               </ul>
@@ -144,7 +144,7 @@ const ProductoDetallePage = () => {
               <div className="space-y-1">
                 {producto.categorias.map((cat: any) => (
                   <RelacionItemRow key={cat.id || cat.categoria_id} onRemove={() => handleRemoveCategoria(cat.id || cat.categoria_id)} isPending={updateMutation.isPending}>
-                    <span className="font-medium text-text">{cat.nombre}</span>
+                    <span className="font-medium text-text">{cat.categoria?.nombre || cat.nombre}</span>
                   </RelacionItemRow>
                 ))}
               </div>
