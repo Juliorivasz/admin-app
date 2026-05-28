@@ -84,18 +84,31 @@ const ProductoDetallePage = () => {
         <Link to="/productos" className="text-primary hover:text-primary-hover text-sm font-medium flex items-center gap-2 mb-6 w-fit">
           &larr; Volver a Productos
         </Link>
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-4xl font-bold text-text">{producto.name}</h1>
-            <div className="mt-6 flex items-center gap-4">
-              <span className="text-3xl font-bold text-primary bg-primary/10 px-4 py-1.5 rounded-xl border border-primary/20">
-                ${producto.price.toFixed(2)}
-              </span>
-              <StatusBadge variant={producto.disponible ? 'disponible' : 'no-disponible'} />
-              <StockBadge cantidad={producto.stock_cantidad} unidad="uds" />
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
+          <div className="flex gap-6 items-start">
+            {/* Imagen del producto */}
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden bg-surface-2 border border-border shrink-0 shadow-inner flex items-center justify-center">
+              {producto.imagen_url ? (
+                <img src={producto.imagen_url} alt={producto.name} className="w-full h-full object-cover" />
+              ) : (
+                <img src={`https://api.dicebear.com/7.x/shapes/svg?seed=${(producto.name || '').toLowerCase()}&backgroundColor=1D1E2C`} alt={producto.name} className="w-full h-full object-cover opacity-80" />
+              )}
+            </div>
+            
+            {/* Información Principal */}
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-text">{producto.name}</h1>
+              <div className="mt-4 sm:mt-6 flex flex-wrap items-center gap-3 sm:gap-4">
+                <span className="text-2xl sm:text-3xl font-bold text-primary bg-primary/10 px-4 py-1.5 rounded-xl border border-primary/20">
+                  ${producto.price.toFixed(2)}
+                </span>
+                <StatusBadge variant={producto.disponible ? 'disponible' : 'no-disponible'} />
+                <StockBadge cantidad={producto.stock_cantidad} unidad="uds" />
+              </div>
             </div>
           </div>
-          <div className="text-right">
+
+          <div className="text-left sm:text-right mt-4 sm:mt-0">
             <span className="text-xs uppercase tracking-widest text-text-muted font-semibold">Categoría Principal</span>
             <p className="text-lg font-medium text-text mt-1">{categoriaPrincipal?.nombre || 'Ninguna'}</p>
           </div>

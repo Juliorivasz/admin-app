@@ -10,6 +10,7 @@ export interface ProductoBase {
   price: number;
   stock_cantidad: number;
   disponible: boolean;
+  imagen_url?: string | null;
 }
 
 export interface ProductoCategoriaRead {
@@ -51,16 +52,26 @@ export interface ProductoUpdate extends Partial<ProductoBase> {
 
 // Vistas anidadas para el detalle del producto
 export interface CategoriaEnProducto {
-  id: number;
-  nombre: string;
+  categoria_id?: number;
+  id?: number;
+  nombre?: string;
   es_principal: boolean;
+  categoria?: {
+    id: number;
+    nombre: string;
+  };
 }
 
 export interface IngredienteDetalle {
-  ingrediente_id: number;
-  nombre: string;
-  es_removible: boolean;
-  es_alergeno: boolean;
+  ingrediente_id?: number;
+  nombre?: string;
+  es_removible?: boolean;
+  es_alergeno?: boolean;
+  ingrediente?: {
+    id: number;
+    name: string;
+    esAlergeno: boolean;
+  };
 }
 
 export interface ProductoDetalle extends Omit<Producto, 'categorias' | 'ingredientes'> {
