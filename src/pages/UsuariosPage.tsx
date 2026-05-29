@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUsuarios, createUsuario, updateUsuario, deleteUsuario } from '../services/usuarioService';
+import { getUsuarios, createUsuario, updateUsuario } from '../services/usuarioService';
 import { DataTable } from '../components/ui/DataTable';
 import { GenericWizardForm, type FormFieldConfig } from '../components/forms/GenericWizardForm';
-import { ConfirmModal } from '../components/ui/ConfirmModal';
+
 import PageHeader from '../components/ui/PageHeader';
 import FilterBar from '../components/ui/FilterBar';
 import QueryStateWrapper from '../components/ui/QueryStateWrapper';
@@ -16,7 +16,6 @@ const UsuariosPage = () => {
   const [modalMode, setModalMode] = useState<'create' | 'view' | 'edit'>('create');
   const [searchText, setSearchText] = useState('');
   const [rolFilter, setRolFilter] = useState('');
-  const [usuarioToDelete, setUsuarioToDelete] = useState<any>(null);
 
   // ── Queries ─────────────────────────────────────────────────────────
   const { data: usuarios, isLoading, isError } = useQuery({
@@ -25,7 +24,7 @@ const UsuariosPage = () => {
   });
 
   const filteredData = useMemo(() => {
-    let data = Array.isArray(usuarios) ? usuarios : [];
+    let data: any[] = Array.isArray(usuarios) ? usuarios : [];
 
     if (searchText) {
       data = data.filter((u: any) => 
@@ -59,13 +58,7 @@ const UsuariosPage = () => {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteUsuario,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
-      setUsuarioToDelete(null);
-    },
-  });
+
 
   const columns = useMemo<ColumnDef<any, any>[]>(() => [
     {

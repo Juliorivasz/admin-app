@@ -4,7 +4,6 @@ import { Mail, Lock, LogIn } from 'lucide-react';
 import Button from '../components/ui/Button';
 
 import { useAuthStore } from '../store/authStore';
-import { AxiosError } from 'axios';
 
 const LoginPage = () => {
   const navigate = useNavigate();

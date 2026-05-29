@@ -60,7 +60,7 @@ const ProductoFormModal = ({
   const [stockCantidad, setStockCantidad] = useState(String(defaultValues?.stock_cantidad ?? ''));
   const [disponible, setDisponible] = useState(defaultValues?.disponible ?? true);
   const [imagenUrl, setImagenUrl] = useState(defaultValues?.imagen_url ?? '');
-  const [unidadVentaId, setUnidadVentaId] = useState(String(defaultValues?.unidad_venta_id ?? defaultValues?.unidad_medida_id ?? '6'));
+  const [unidadVentaId, setUnidadVentaId] = useState(String(defaultValues?.unidad_venta_id ?? (defaultValues as any)?.unidad_medida_id ?? '6'));
 
   const [selectedCategorias, setSelectedCategorias] = useState<number[]>([]);
   const [selectedIngredientes, setSelectedIngredientes] = useState<ProductoIngredientePayload[]>([]);
@@ -111,7 +111,7 @@ const ProductoFormModal = ({
     setStockCantidad(String(defaultValues?.stock_cantidad ?? ''));
     setDisponible(defaultValues?.disponible ?? true);
     setImagenUrl(defaultValues?.imagen_url ?? '');
-    setUnidadVentaId(String(defaultValues?.unidad_venta_id ?? defaultValues?.unidad_medida_id ?? '6'));
+    setUnidadVentaId(String(defaultValues?.unidad_venta_id ?? (defaultValues as any)?.unidad_medida_id ?? '6'));
     if (!defaultValues?.id) {
       setSelectedCategorias([]);
       setSelectedIngredientes([]);

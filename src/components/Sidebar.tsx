@@ -4,8 +4,7 @@ import {
   Box, 
   UtensilsCrossed, 
   LayoutGrid, 
-  ClipboardList, 
-  Settings, 
+  ClipboardList,
   LogOut,
   LayoutDashboard,
   Users
