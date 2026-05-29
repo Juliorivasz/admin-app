@@ -5,7 +5,7 @@ interface PrivateRouteProps {
   children: ReactNode;
 }
 
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../features/auth/store/authStore';
 
 const PrivateRoute = ({ children }: PrivateRouteProps) => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);

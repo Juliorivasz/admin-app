@@ -14,15 +14,15 @@
  */
 import { lazy } from 'react';
 
-const CategoriasPage = lazy(() => import('../pages/CategoriasPage'));
-const IngredientesPage = lazy(() => import('../pages/IngredientesPage'));
-const ProductosPage = lazy(() => import('../pages/ProductosPage'));
-const ProductoDetallePage = lazy(() => import('../pages/ProductoDetallePage'));
-const PedidosPage = lazy(() => import('../pages/PedidosPage'));
+const CategoriasPage = lazy(() => import('../features/categorias/pages/CategoriasPage'));
+const IngredientesPage = lazy(() => import('../features/ingredientes/pages/IngredientesPage'));
+const ProductosPage = lazy(() => import('../features/productos/pages/ProductosPage'));
+const ProductoDetallePage = lazy(() => import('../features/productos/pages/ProductoDetallePage'));
+const PedidosPage = lazy(() => import('../features/pedidos/pages/PedidosPage'));
 
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
-const UsuariosPage = lazy(() => import('../pages/UsuariosPage'));
-const LoginPage = lazy(() => import('../pages/LoginPage'));
+const UsuariosPage = lazy(() => import('../features/usuarios/pages/UsuariosPage'));
+const LoginPage = lazy(() => import('../features/auth/pages/LoginPage'));
 // const NotFoundPage     = lazy(() => import('../pages/NotFoundPage'));
 
 export type UserRole = 'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT';

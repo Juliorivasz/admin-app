@@ -12,14 +12,14 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import Modal from '../ui/Modal';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
+import Modal from '../../../components/ui/Modal';
+import Button from '../../../components/ui/Button';
+import Input from '../../../components/ui/Input';
 import RelacionesStep from './RelacionesStep';
-import { getIngredientes } from '../../services/ingredienteService';
-import { getCategorias } from '../../services/categoriaService';
-import { getProducto } from '../../services/productoService';
-import type { ProductoCreate, ProductoUpdate, ProductoIngredientePayload } from '../../types/producto';
+import { getIngredientes } from '../../ingredientes/services/ingredienteService';
+import { getCategorias } from '../../categorias/services/categoriaService';
+import { getProducto } from '../services/productoService';
+import type { ProductoCreate, ProductoUpdate, ProductoIngredientePayload } from '../types/producto';
 
 interface ProductoFormModalProps {
   isOpen: boolean;

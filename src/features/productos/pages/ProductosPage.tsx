@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProductos, createProducto, updateProducto, deleteProducto } from '../services/productoService';
-import { DataTable } from '../components/ui/DataTable';
-import { ConfirmModal } from '../components/ui/ConfirmModal';
-import PageHeader from '../components/ui/PageHeader';
-import FilterBar from '../components/ui/FilterBar';
-import QueryStateWrapper from '../components/ui/QueryStateWrapper';
-import StatusBadge from '../components/ui/StatusBadge';
-import StockBadge from '../components/ui/StockBadge';
-import ProductoFormModal from '../components/producto/ProductoFormModal';
+import { DataTable } from '../../../components/ui/DataTable';
+import { ConfirmModal } from '../../../components/ui/ConfirmModal';
+import PageHeader from '../../../components/ui/PageHeader';
+import FilterBar from '../../../components/ui/FilterBar';
+import QueryStateWrapper from '../../../components/ui/QueryStateWrapper';
+import StatusBadge from '../../../components/ui/StatusBadge';
+import StockBadge from '../../../components/ui/StockBadge';
+import ProductoFormModal from '../components/ProductoFormModal';
 import type { ColumnDef } from '@tanstack/react-table';
 
 

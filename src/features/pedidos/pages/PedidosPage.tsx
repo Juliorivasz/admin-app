@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Filter, RotateCw } from 'lucide-react';
-import Button from '../components/ui/Button';
-import StatusBadge from '../components/ui/StatusBadge';
+import Button from '../../../components/ui/Button';
+import StatusBadge from '../../../components/ui/StatusBadge';
 import { getPedidos, updateEstadoPedido } from '../services/pedidoService';
 
 type OrderStatus = 'PENDIENTE' | 'CONFIRMADO' | 'EN_PREPARACION' | 'LISTO' | 'ENTREGADO' | 'CANCELADO';

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import type { Categoria, CategoriaEnProducto } from '../../types';
-import Button from '../ui/Button';
+import type { Categoria } from '../../categorias/types/categoria';
+import type { CategoriaEnProducto } from '../types/producto';
+import Button from '../../../components/ui/Button';
 
 interface AddCategoriaFormProps {
   todasCategorias: Categoria[];

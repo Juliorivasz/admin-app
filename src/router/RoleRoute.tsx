@@ -7,7 +7,7 @@ interface RoleRouteProps {
   children: ReactNode;
 }
 
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../features/auth/store/authStore';
 
 const RoleRoute = ({ roles, children }: RoleRouteProps) => {
   const user = useAuthStore(state => state.user);

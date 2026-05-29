@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import api from '../api/axios';
+import axiosInstance from '../../../api/axios';
 
 export type UserRole = 'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT';
 
@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   
   checkAuth: async () => {
     try {
-      const response = await api.get('/auth/me');
+      const response = await axiosInstance.get('/auth/me');
       set({ user: response as any, isAuthenticated: true });
     } catch (error) {
       set({ user: null, isAuthenticated: false });
@@ -37,13 +37,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   login: async (data: any) => {
-    const response = await api.post('/auth/login', data);
+    const response = await axiosInstance.post('/auth/login', data);
     set({ user: response as any, isAuthenticated: true });
   },
 
   logout: async () => {
     try {
-      await api.post('/auth/logout');
+      await axiosInstance.post('/auth/logout');
     } finally {
       set({ user: null, isAuthenticated: false });
       window.location.href = '/login';

@@ -15,8 +15,3 @@
  */
 
 export * from './common';
-export * from './categoria';
-export * from './ingrediente';
-export * from './productoCategoria';
-export * from './productoIngrediente';
-export * from './producto';

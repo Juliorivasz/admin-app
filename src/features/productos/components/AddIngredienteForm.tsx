@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import type { Ingrediente, IngredienteDetalle } from '../../types';
-import Button from '../ui/Button';
+import { type Ingrediente } from '../../ingredientes/types/ingrediente';
+import { type IngredienteDetalle } from '../types/producto';
+import Button from '../../../components/ui/Button';
 
 interface AddIngredienteFormProps {
   todosIngredientes: Ingrediente[];

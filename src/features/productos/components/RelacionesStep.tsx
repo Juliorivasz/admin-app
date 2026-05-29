@@ -15,9 +15,9 @@
  *    Opcional → el cliente puede pedirlo sin este ingrediente (es_removible: true)
  */
 import { useState } from 'react';
-import type { Categoria } from '../../types/categoria';
-import type { Ingrediente } from '../../types/ingrediente';
-import type { ProductoIngredientePayload } from '../../types/producto';
+import type { Categoria } from '../../categorias/types/categoria';
+import type { Ingrediente } from '../../ingredientes/types/ingrediente';
+import type { ProductoIngredientePayload } from '../types/producto';
 
 interface RelacionesStepProps {
   categorias: Categoria[];

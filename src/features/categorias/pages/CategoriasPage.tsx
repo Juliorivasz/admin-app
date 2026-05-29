@@ -1,15 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCategorias, createCategoria, updateCategoria, deleteCategoria } from '../services/categoriaService';
-import CategoriaTreeView from '../components/ui/CategoriaTreeView';
-import { Toggle } from '../components/ui/Toggle';
-import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { GenericWizardForm, type FormFieldConfig } from '../components/forms/GenericWizardForm';
-import PageHeader from '../components/ui/PageHeader';
-import FilterBar from '../components/ui/FilterBar';
-import QueryStateWrapper from '../components/ui/QueryStateWrapper';
+import CategoriaTreeView from '../../../components/ui/CategoriaTreeView';
+import { Toggle } from '../../../components/ui/Toggle';
+import { ConfirmModal } from '../../../components/ui/ConfirmModal';
+import { GenericWizardForm, type FormFieldConfig } from '../../../components/forms/GenericWizardForm';
+import PageHeader from '../../../components/ui/PageHeader';
+import FilterBar from '../../../components/ui/FilterBar';
+import QueryStateWrapper from '../../../components/ui/QueryStateWrapper';
 
-import type { CategoriaCreate } from '../types';
+
+import type { CategoriaCreate } from '../types/categoria';
 
 const CategoriasPage = () => {
   const queryClient = useQueryClient();
@@ -114,7 +115,7 @@ const CategoriasPage = () => {
       <QueryStateWrapper isLoading={isLoading} isError={isError} errorMsg="Error al cargar categorías.">
         <CategoriaTreeView
           data={filteredData}
-          onRowClick={(row) => { setSelectedItem(row); setModalMode('view'); setIsModalOpen(true); }}
+          onRowClick={(row: any) => { setSelectedItem(row); setModalMode('view'); setIsModalOpen(true); }}
         />
       </QueryStateWrapper>
 

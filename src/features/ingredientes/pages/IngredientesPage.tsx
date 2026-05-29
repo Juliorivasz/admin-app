@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getIngredientes, createIngrediente, updateIngrediente } from '../services/ingredienteService';
-import { DataTable } from '../components/ui/DataTable';
-import { GenericWizardForm, type FormFieldConfig } from '../components/forms/GenericWizardForm';
-import PageHeader from '../components/ui/PageHeader';
-import FilterBar from '../components/ui/FilterBar';
-import QueryStateWrapper from '../components/ui/QueryStateWrapper';
-import StatusBadge from '../components/ui/StatusBadge';
-import type { IngredienteCreate } from '../types';
+import { DataTable } from '../../../components/ui/DataTable';
+import { GenericWizardForm, type FormFieldConfig } from '../../../components/forms/GenericWizardForm';
+import PageHeader from '../../../components/ui/PageHeader';
+import FilterBar from '../../../components/ui/FilterBar';
+import QueryStateWrapper from '../../../components/ui/QueryStateWrapper';
+import StatusBadge from '../../../components/ui/StatusBadge';
+import type { IngredienteCreate } from '../types/ingrediente';
 import type { ColumnDef } from '@tanstack/react-table';
 
 const IngredientesPage = () => {

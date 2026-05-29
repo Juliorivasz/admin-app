@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProducto, updateProducto } from '../services/productoService';
-import { getIngredientes } from '../services/ingredienteService';
-import { getCategorias } from '../services/categoriaService';
-import Modal from '../components/ui/Modal';
-import Button from '../components/ui/Button';
-import QueryStateWrapper from '../components/ui/QueryStateWrapper';
-import StatusBadge from '../components/ui/StatusBadge';
-import StockBadge from '../components/ui/StockBadge';
-import RelacionItemRow from '../components/ui/RelacionItemRow';
-import AddIngredienteForm from '../components/producto/AddIngredienteForm';
-import AddCategoriaForm from '../components/producto/AddCategoriaForm';
+import { getIngredientes } from '../../ingredientes/services/ingredienteService';
+import { getCategorias } from '../../categorias/services/categoriaService';
+import Modal from '../../../components/ui/Modal';
+import Button from '../../../components/ui/Button';
+import QueryStateWrapper from '../../../components/ui/QueryStateWrapper';
+import StatusBadge from '../../../components/ui/StatusBadge';
+import StockBadge from '../../../components/ui/StockBadge';
+import RelacionItemRow from '../../../components/ui/RelacionItemRow';
+import AddIngredienteForm from '../components/AddIngredienteForm';
+import AddCategoriaForm from '../components/AddCategoriaForm';
 
 const ProductoDetallePage = () => {
   const { id } = useParams<{ id: string }>();
