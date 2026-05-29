@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import Button from '../components/ui/Button';
 
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/authStore';
 import { AxiosError } from 'axios';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const login = useAuthStore(state => state.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);

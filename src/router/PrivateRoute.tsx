@@ -5,10 +5,11 @@ interface PrivateRouteProps {
   children: ReactNode;
 }
 
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/authStore';
 
 const PrivateRoute = ({ children }: PrivateRouteProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const isLoading = useAuthStore(state => state.isLoading);
   const location = useLocation();
 
   if (isLoading) {

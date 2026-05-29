@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/authStore';
 import { 
   Box, 
   UtensilsCrossed, 
@@ -24,7 +24,8 @@ import {
  * ═══════════════════════════════════════════════════
  */
 const Sidebar = () => {
-  const { user, logout } = useAuth();
+  const user = useAuthStore(state => state.user);
+  const logout = useAuthStore(state => state.logout);
   
   const mainNavItems = [
     { name: 'Dashboard',    path: '/',             icon: LayoutDashboard, roles: ['ADMIN', 'STOCK', 'PEDIDOS'] },

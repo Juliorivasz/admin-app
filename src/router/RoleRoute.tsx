@@ -7,10 +7,11 @@ interface RoleRouteProps {
   children: ReactNode;
 }
 
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../store/authStore';
 
 const RoleRoute = ({ roles, children }: RoleRouteProps) => {
-  const { user, isLoading } = useAuth();
+  const user = useAuthStore(state => state.user);
+  const isLoading = useAuthStore(state => state.isLoading);
 
   if (isLoading) {
     return <div className="h-screen flex items-center justify-center text-text-muted">Verificando permisos...</div>;
