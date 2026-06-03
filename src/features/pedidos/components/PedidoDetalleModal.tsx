@@ -19,7 +19,7 @@ const PedidoDetalleModal = ({ isOpen, onClose, pedido }: PedidoDetalleModalProps
       case 'EN_PREPARACION': return 'pedido-preparacion';
       case 'LISTO': return 'pedido-listo';
       case 'ENTREGADO': return 'pedido-entregado';
-      case 'CANCELADO': return 'inactivo';
+      case 'CANCELADO': return 'pedido-cancelado';
       default: return 'pedido-pendiente';
     }
   };

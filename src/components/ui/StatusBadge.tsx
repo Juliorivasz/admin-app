@@ -25,7 +25,8 @@ type StatusVariant =
   | 'pedido-pendiente'
   | 'pedido-preparacion'
   | 'pedido-listo'
-  | 'pedido-entregado';
+  | 'pedido-entregado'
+  | 'pedido-cancelado';
 
 interface VariantConfig {
   label: string;
@@ -112,6 +113,11 @@ const VARIANTS: Record<StatusVariant, VariantConfig> = {
   'pedido-entregado': {
     label: '✓ ENTREGADO',
     badge: 'bg-transparent text-[#8A8F9E]',
+    dot:   undefined,
+  },
+  'pedido-cancelado': {
+    label: '✕ CANCELADO',
+    badge: 'bg-[rgba(217,83,79,0.1)] text-[#D9534F] border-[rgba(217,83,79,0.2)]',
     dot:   undefined,
   },
 };

@@ -198,16 +198,49 @@ const PedidosPage = () => {
             {columns.finalizados.length === 0 ? (
               <p className="text-text-muted text-sm text-center">No hay pedidos finalizados (Entregados/Cancelados).</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-                {columns.finalizados.map(order => (
-                  <PedidoCard 
-                    key={order.id} 
-                    order={order} 
-                    onChangeStatus={changeOrderStatus}
-                    onClick={() => setSelectedOrder(order)}
-                    isLoading={false}
-                  />
-                ))}
+              <div className="max-h-[400px] overflow-y-auto custom-scrollbar border border-border rounded-lg bg-surface">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-surface-2 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-text-muted uppercase tracking-wider border-b border-border">Pedido #</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-text-muted uppercase tracking-wider border-b border-border">Cliente</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-text-muted uppercase tracking-wider border-b border-border">Fecha</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-text-muted uppercase tracking-wider border-b border-border">Total</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-text-muted uppercase tracking-wider border-b border-border">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {columns.finalizados.map(order => {
+                      const isEntregado = order.estado_codigo === 'ENTREGADO';
+                      const isCancelado = order.estado_codigo === 'CANCELADO';
+                      const variant = isEntregado ? 'pedido-entregado' : isCancelado ? 'pedido-cancelado' : 'pedido-pendiente';
+                      
+                      return (
+                        <tr 
+                          key={order.id} 
+                          className="hover:bg-surface-2/30 transition-colors cursor-pointer"
+                          onClick={() => setSelectedOrder(order)}
+                        >
+                          <td className="px-4 py-3 text-[13px] font-medium text-text">
+                            #{order.id}
+                          </td>
+                          <td className="px-4 py-3 text-[13px] text-text-muted">
+                            {order.nombre_cliente || `Usuario #${order.id}`}
+                          </td>
+                          <td className="px-4 py-3 text-[13px] text-text-muted">
+                            {new Date(order.created_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                          </td>
+                          <td className="px-4 py-3 text-[13px] font-semibold text-blue-300">
+                            ${(order.total || 0).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <StatusBadge variant={variant} />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -249,7 +282,7 @@ const PedidoCard = ({
       case 'EN_PREPARACION': return 'pedido-preparacion';
       case 'LISTO': return 'pedido-listo';
       case 'ENTREGADO': return 'pedido-entregado';
-      case 'CANCELADO': return 'inactivo';
+      case 'CANCELADO': return 'pedido-cancelado';
       default: return 'pedido-pendiente';
     }
   };
