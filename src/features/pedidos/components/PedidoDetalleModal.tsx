@@ -12,6 +12,18 @@ interface PedidoDetalleModalProps {
 const PedidoDetalleModal = ({ isOpen, onClose, pedido }: PedidoDetalleModalProps) => {
   if (!pedido) return null;
 
+  const getBadgeVariant = (estado: string = '') => {
+    switch (estado) {
+      case 'PENDIENTE': return 'pedido-pendiente';
+      case 'CONFIRMADO': return 'pedido-preparacion';
+      case 'EN_PREPARACION': return 'pedido-preparacion';
+      case 'LISTO': return 'pedido-listo';
+      case 'ENTREGADO': return 'pedido-entregado';
+      case 'CANCELADO': return 'inactivo';
+      default: return 'pedido-pendiente';
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Pedido #${pedido.id}`}>
       <div className="space-y-6">
@@ -21,7 +33,7 @@ const PedidoDetalleModal = ({ isOpen, onClose, pedido }: PedidoDetalleModalProps
           <div>
             <p className="text-xs text-text-muted uppercase tracking-widest font-semibold mb-1">Cliente</p>
             <p className="text-sm font-medium text-text">
-              {pedido.usuario?.name} {pedido.usuario?.lastname}
+              {pedido.nombre_cliente || `Usuario #${pedido.usuario?.name || 'Invitado'}`}
             </p>
             {pedido.usuario?.phone_number && (
               <p className="text-xs text-text-muted">{pedido.usuario.phone_number}</p>
@@ -29,28 +41,27 @@ const PedidoDetalleModal = ({ isOpen, onClose, pedido }: PedidoDetalleModalProps
           </div>
           <div className="text-left sm:text-right">
             <p className="text-xs text-text-muted uppercase tracking-widest font-semibold mb-1">Estado Actual</p>
-            <StatusBadge variant={(pedido.estado_codigo?.toLowerCase() as any) || 'pendiente'} />
+            <StatusBadge variant={getBadgeVariant(pedido.estado_codigo)} />
           </div>
         </div>
 
-        {/* Detalles (Platos) */}
         <div>
           <h3 className="text-sm font-bold text-text mb-3">Platos Solicitados</h3>
-          <div className="space-y-2">
-            {pedido.detalles?.map((detalle, idx) => (
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+            {(pedido.detalles_pedido || pedido.detalles)?.map((detalle, idx) => (
               <div key={idx} className="flex justify-between items-center p-3 bg-surface border border-border rounded-lg">
                 <div className="flex items-center gap-3">
                   <span className="w-6 h-6 rounded-md bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">
                     {detalle.cantidad}x
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-text">{detalle.producto?.name}</p>
+                    <p className="text-sm font-medium text-text">{detalle.nombre_snapshot || detalle.producto?.name}</p>
                   </div>
                 </div>
-                <p className="text-sm font-bold text-text">${(detalle.subtotal || (detalle.cantidad * (detalle.producto?.price || 0))).toFixed(2)}</p>
+                <p className="text-sm font-bold text-text">${(detalle.subtotal || (detalle.cantidad * (detalle.precio_snapshot || detalle.producto?.price || 0))).toFixed(2)}</p>
               </div>
             ))}
-            {(!pedido.detalles || pedido.detalles.length === 0) && (
+            {(!(pedido.detalles_pedido || pedido.detalles) || (pedido.detalles_pedido || pedido.detalles)?.length === 0) && (
               <p className="text-sm text-text-muted italic text-center p-4">No hay detalles registrados.</p>
             )}
           </div>
