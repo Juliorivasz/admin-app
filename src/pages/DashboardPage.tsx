@@ -1,6 +1,26 @@
-import { DollarSign, Package, ShoppingCart, TrendingUp } from 'lucide-react';
+import { DollarSign, Package, ShoppingCart, TrendingUp, RotateCw } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { getKpis } from '../features/dashboard/services/dashboard.service';
+import { useWebSocket } from '../hooks/useWebSocket';
+import Button from '../components/ui/Button';
 
 const DashboardPage = () => {
+  const queryClient = useQueryClient();
+  const { data: kpis, isLoading, isError, refetch } = useQuery({
+    queryKey: ['dashboard-kpis'],
+    queryFn: getKpis,
+  });
+
+  const { isConnected, lastMessage } = useWebSocket(`ws://${window.location.host}/ws-pedidos`);
+
+  useEffect(() => {
+    if (lastMessage) {
+      console.log('Real-time update received:', lastMessage.event);
+      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+    }
+  }, [lastMessage, queryClient]);
+
   return (
     <div className="flex flex-col h-full space-y-6">
       <div className="flex justify-between items-center bg-surface rounded-xl p-6 border border-border shrink-0">
@@ -12,38 +32,55 @@ const DashboardPage = () => {
             Resumen de actividad y métricas clave del día.
           </p>
         </div>
+        <div className="flex items-center gap-3">
+          <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} mr-2`} title={isConnected ? 'Conectado a tiempo real' : 'Desconectado'} />
+          <Button variant="primary" className="px-4 py-2 text-[13px]" onClick={() => refetch()}>
+            <RotateCw className="w-4 h-4" />
+            Actualizar
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Recaudación Hoy"
-          value="$1,240.00"
-          icon={<DollarSign className="w-5 h-5" />}
-          trend="+12% vs ayer"
-          trendPositive={true}
-        />
-        <MetricCard
-          title="Pedidos Completados"
-          value="45"
-          icon={<ShoppingCart className="w-5 h-5" />}
-          trend="+5% vs ayer"
-          trendPositive={true}
-        />
-        <MetricCard
-          title="Pedidos Pendientes"
-          value="8"
-          icon={<TrendingUp className="w-5 h-5" />}
-          trend="-2% vs ayer"
-          trendPositive={false}
-        />
-        <MetricCard
-          title="Productos Bajo Stock"
-          value="3"
-          icon={<Package className="w-5 h-5" />}
-          trend="Revisar inventario"
-          trendPositive={false}
-        />
-      </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center p-12">
+          <p className="text-text-muted">Cargando métricas...</p>
+        </div>
+      ) : isError ? (
+        <div className="flex items-center justify-center p-12">
+          <p className="text-red-500">Error al cargar las métricas. Verifica tu conexión o sesión.</p>
+        </div>
+      ) : kpis ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <MetricCard
+            title={kpis.recaudacion.label}
+            value={`$${kpis.recaudacion.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            icon={<DollarSign className="w-5 h-5" />}
+            trend={kpis.recaudacion.trend}
+            trendPositive={kpis.recaudacion.status === 'up'}
+          />
+          <MetricCard
+            title={kpis.pedidos_completados.label}
+            value={kpis.pedidos_completados.value.toString()}
+            icon={<ShoppingCart className="w-5 h-5" />}
+            trend={kpis.pedidos_completados.trend}
+            trendPositive={kpis.pedidos_completados.status === 'up'}
+          />
+          <MetricCard
+            title={kpis.pedidos_pendientes.label}
+            value={kpis.pedidos_pendientes.value.toString()}
+            icon={<TrendingUp className="w-5 h-5" />}
+            trend={kpis.pedidos_pendientes.trend}
+            trendPositive={kpis.pedidos_pendientes.status === 'up'}
+          />
+          <MetricCard
+            title={kpis.bajo_stock.label}
+            value={kpis.bajo_stock.value.toString()}
+            icon={<Package className="w-5 h-5" />}
+            trend={kpis.bajo_stock.trend}
+            trendPositive={kpis.bajo_stock.status === 'up'}
+          />
+        </div>
+      ) : null}
 
       <div className="bg-surface rounded-xl border border-border p-6 flex-1 min-h-[300px] flex items-center justify-center">
         <p className="text-text-muted text-[14px]">
