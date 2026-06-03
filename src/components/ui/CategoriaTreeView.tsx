@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronRight, ChevronDown } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
@@ -43,13 +43,17 @@ function buildTree(flatData: any[]): TreeNode[] {
 
   return roots;
 }
-
 const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
-  // Estado de expandidos. Por defecto vacío (todo colapsado)
+  // Estado de expandidos. Por defecto, expandir todos
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
+  // Inicializar expandidos una vez cuando la data carga
+  useEffect(() => {
+    const allIds = data.map(d => d.id);
+    setExpandedIds(new Set(allIds));
+  }, [data]);
   const toggleExpand = (e: React.MouseEvent, id: number) => {
-    e.stopPropagation(); // Evitar que se abra el modal al hacer clic en la flecha
+    e.stopPropagation();
     const newSet = new Set(expandedIds);
     if (newSet.has(id)) {
       newSet.delete(id);
@@ -128,7 +132,7 @@ const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
 
         {/* Renderizado de hijos si está expandido */}
         {hasChildren && isExpanded && (
-          <div className="flex flex-col border-l border-border/30 ml-4">
+          <div className="flex flex-col relative before:absolute before:left-[1.8rem] before:top-0 before:bottom-0 before:w-px before:bg-border">
             {node.children.map(renderNode)}
           </div>
         )}

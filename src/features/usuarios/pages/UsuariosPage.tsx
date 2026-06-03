@@ -110,9 +110,8 @@ const UsuariosPage = () => {
     { name: 'lastname', label: 'Apellido', type: 'text', step: 0, required: true },
     { name: 'email', label: 'Correo Electrónico', type: 'text', step: 0, required: true },
     { name: 'phone_number', label: 'Celular (Opcional)', type: 'number', step: 0 },
-    { name: 'esAdmin', label: 'Administrador (Control Total)', type: 'checkbox', step: 0 },
-    { name: 'esPedidos', label: 'Encargado de Pedidos', type: 'checkbox', step: 0, hidden: (values: any) => values.esAdmin },
-    { name: 'esStock', label: 'Encargado de Stock', type: 'checkbox', step: 0, hidden: (values: any) => values.esAdmin },
+    { name: 'esPedidos', label: 'Encargado de Pedidos (Cajero)', type: 'checkbox', step: 0 },
+    { name: 'esStock', label: 'Encargado de Cocina/Stock', type: 'checkbox', step: 0 },
   ];
 
   if (modalMode === 'create') {
@@ -123,11 +122,10 @@ const UsuariosPage = () => {
 
   const getFormValues = () => {
     if (!selectedItem) {
-      return { name: '', lastname: '', email: '', phone_number: '', password_hash: '', esAdmin: false, esPedidos: false, esStock: false, esClient: false };
+      return { name: '', lastname: '', email: '', phone_number: '', password_hash: '', esPedidos: false, esStock: false };
     }
     return {
       ...selectedItem,
-      esAdmin: selectedItem.roles?.includes('ADMIN') || false,
       esPedidos: selectedItem.roles?.includes('PEDIDOS') || false,
       esStock: selectedItem.roles?.includes('STOCK') || false,
     };
@@ -181,19 +179,14 @@ const UsuariosPage = () => {
         onEnableEdit={() => setModalMode('edit')}
         onSubmit={async (values) => {
           const roles = [];
-          if (values.esAdmin) {
-            roles.push('ADMIN');
-          } else {
-            if (values.esPedidos) roles.push('PEDIDOS');
-            if (values.esStock) roles.push('STOCK');
-          }
+          if (values.esPedidos) roles.push('PEDIDOS');
+          if (values.esStock) roles.push('STOCK');
           
           const finalData = {
             ...values,
             roles,
             phone_number: values.phone_number ? parseInt(values.phone_number) : null
           };
-          delete finalData.esAdmin;
           delete finalData.esPedidos;
           delete finalData.esStock;
 

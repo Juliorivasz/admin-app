@@ -95,6 +95,6 @@ export const privateRoutes: AppRoute[] = [
     element: <PedidosPage />,
     withLayout: true,
     requiresAuth: true,
-    roles: ['ADMIN', 'PEDIDOS'],
+    roles: ['ADMIN', 'STOCK', 'PEDIDOS'],
   },
 ];

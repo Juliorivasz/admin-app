@@ -30,6 +30,15 @@ interface RelacionesStepProps {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+const getCategoryPath = (id: number, allCats: Categoria[]): string => {
+  const cat = allCats.find(c => c.id === id);
+  if (!cat) return '';
+  if (cat.parent_id) {
+    const parentPath = getCategoryPath(cat.parent_id, allCats);
+    return parentPath ? `${parentPath} > ${cat.nombre}` : cat.nombre;
+  }
+  return cat.nombre;
+};
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
@@ -115,7 +124,9 @@ const RelacionesStep = ({
               <div key={cat.id}
                 className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-primary/5 border border-primary/20 rounded-lg">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-xs font-medium text-text truncate">{cat.nombre}</span>
+                  <span className="text-xs font-medium text-text truncate" title={getCategoryPath(cat.id, categorias)}>
+                    {getCategoryPath(cat.id, categorias)}
+                  </span>
                 </div>
                 {!isViewMode && (
                   <div className="flex items-center gap-1 shrink-0">
@@ -140,8 +151,9 @@ const RelacionesStep = ({
             <div className="flex flex-wrap gap-1.5">
               {availableCatItems.map(cat => (
                 <button key={cat.id} type="button" onClick={() => addCat(cat.id)} disabled={isViewMode}
-                  className="px-2.5 py-1 rounded-full text-xs font-medium border bg-surface-2 border-border text-text-muted hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                  + {cat.nombre}
+                  title={getCategoryPath(cat.id, categorias)}
+                  className="px-2.5 py-1 rounded-full text-xs font-medium border bg-surface-2 border-border text-text-muted hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed max-w-full truncate">
+                  + {getCategoryPath(cat.id, categorias)}
                 </button>
               ))}
             </div>

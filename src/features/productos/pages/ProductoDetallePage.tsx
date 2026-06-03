@@ -12,6 +12,17 @@ import StockBadge from '../../../components/ui/StockBadge';
 import RelacionItemRow from '../../../components/ui/RelacionItemRow';
 import AddIngredienteForm from '../components/AddIngredienteForm';
 import AddCategoriaForm from '../components/AddCategoriaForm';
+import type { Categoria } from '../../categorias/types/categoria';
+
+const getCategoryPath = (id: number, allCats: Categoria[]): string => {
+  const cat = allCats.find(c => c.id === id);
+  if (!cat) return '';
+  if (cat.parent_id) {
+    const parentPath = getCategoryPath(cat.parent_id, allCats);
+    return parentPath ? `${parentPath} > ${cat.nombre}` : cat.nombre;
+  }
+  return cat.nombre;
+};
 
 const ProductoDetallePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -110,7 +121,7 @@ const ProductoDetallePage = () => {
 
           <div className="text-left sm:text-right mt-4 sm:mt-0">
             <span className="text-xs uppercase tracking-widest text-text-muted font-semibold">Categoría Principal</span>
-            <p className="text-lg font-medium text-text mt-1">{categoriaPrincipal?.nombre || 'Ninguna'}</p>
+            <p className="text-lg font-medium text-text mt-1">{categoriaPrincipal ? getCategoryPath(categoriaPrincipal.id, todasCategorias) : 'Ninguna'}</p>
           </div>
         </div>
       </div>
@@ -157,7 +168,7 @@ const ProductoDetallePage = () => {
               <div className="space-y-1">
                 {producto.categorias.map((cat: any) => (
                   <RelacionItemRow key={cat.id || cat.categoria_id} onRemove={() => handleRemoveCategoria(cat.id || cat.categoria_id)} isPending={updateMutation.isPending}>
-                    <span className="font-medium text-text">{cat.categoria?.nombre || cat.nombre}</span>
+                    <span className="font-medium text-text">{getCategoryPath(cat.categoria?.id || cat.categoria_id, todasCategorias) || cat.categoria?.nombre || cat.nombre}</span>
                   </RelacionItemRow>
                 ))}
               </div>

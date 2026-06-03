@@ -1,31 +1,30 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Filter, RotateCw } from 'lucide-react';
+import { Filter, RotateCw, ChevronDown, ChevronRight } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import { getPedidos, updateEstadoPedido } from '../services/pedidoService';
-
-type OrderStatus = 'PENDIENTE' | 'CONFIRMADO' | 'EN_PREPARACION' | 'LISTO' | 'ENTREGADO' | 'CANCELADO';
-
-interface OrderItem {
-  id?: number;
-  producto_id?: number;
-  cantidad: number;
-  nombre_snapshot: string;
-  precio_snapshot: number;
-}
-
-interface Order {
-  id: number;
-  nombre_cliente: string;
-  estado_codigo: OrderStatus;
-  detalles_pedido: OrderItem[];
-  total: number;
-  created_at: string;
-}
+import { useWebSocket } from '../../../hooks/useWebSocket';
+import { useEffect, useState } from 'react';
+import PedidoDetalleModal from '../components/PedidoDetalleModal';
+import type { Order, OrderStatus } from '../types/order';
 
 const PedidosPage = () => {
   const queryClient = useQueryClient();
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState<boolean>(false);
+  
+  // Connect to WebSocket using the current host so Vite proxies it and includes the HttpOnly cookie
+  const { isConnected, lastMessage } = useWebSocket(`ws://${window.location.host}/ws-pedidos`);
+
+  // Listen for WebSocket events to refresh the orders list
+  useEffect(() => {
+    if (lastMessage) {
+      console.log('Real-time order update received:', lastMessage.event);
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] });
+    }
+  }, [lastMessage, queryClient]);
 
   const { data: pedidosResponse, isLoading, isError, refetch } = useQuery({
     queryKey: ['pedidos'],
@@ -42,18 +41,23 @@ const PedidosPage = () => {
 
   // Extract array of orders from Axios response
   const orders: Order[] = useMemo(() => {
+    let list: Order[] = [];
     if (!pedidosResponse) return [];
-    if (Array.isArray(pedidosResponse)) return pedidosResponse;
-    if (Array.isArray((pedidosResponse as any).data)) return (pedidosResponse as any).data;
-    return [];
-  }, [pedidosResponse]);
+    if (Array.isArray(pedidosResponse)) list = pedidosResponse;
+    else if (Array.isArray((pedidosResponse as any).data)) list = (pedidosResponse as any).data;
+    
+    if (selectedDate) {
+      list = list.filter(o => o.created_at && o.created_at.startsWith(selectedDate));
+    }
+    return list;
+  }, [pedidosResponse, selectedDate]);
 
   // Derivar columnas (Kanban) con estados reales del backend
   const columns = useMemo(() => {
     return {
       entrantes: orders.filter(o => o.estado_codigo === 'PENDIENTE' || o.estado_codigo === 'CONFIRMADO'),
       preparacion: orders.filter(o => o.estado_codigo === 'EN_PREPARACION' || o.estado_codigo === 'LISTO'),
-      entregados: orders.filter(o => o.estado_codigo === 'ENTREGADO'),
+      finalizados: orders.filter(o => o.estado_codigo === 'ENTREGADO' || o.estado_codigo === 'CANCELADO'),
     };
   }, [orders]);
 
@@ -92,6 +96,26 @@ const PedidosPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 mr-2">
+            <span className="text-[13px] text-text-muted">Fecha:</span>
+            <input 
+              type="date" 
+              className="bg-surface-2 border border-border rounded-md px-3 py-1.5 text-[13px] text-text focus:outline-none focus:border-primary"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+            {selectedDate && (
+              <button 
+                onClick={() => setSelectedDate('')}
+                className="text-[12px] text-text-muted hover:text-white"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
+          
+          <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} mr-2`} title={isConnected ? 'Conectado a tiempo real' : 'Desconectado'} />
+
           <Button variant="secondary" className="px-4 py-2 text-[13px]">
             <Filter className="w-4 h-4" />
             Filtros
@@ -122,6 +146,7 @@ const PedidosPage = () => {
                 key={order.id} 
                 order={order} 
                 onChangeStatus={changeOrderStatus} 
+                onClick={() => setSelectedOrder(order)}
                 isLoading={updateEstadoMutation.isPending && updateEstadoMutation.variables?.id === order.id}
               />
             ))}
@@ -144,28 +169,7 @@ const PedidosPage = () => {
                 key={order.id} 
                 order={order} 
                 onChangeStatus={changeOrderStatus}
-                isLoading={updateEstadoMutation.isPending && updateEstadoMutation.variables?.id === order.id}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* COLUMNA 3: Entregados */}
-        <div className="flex flex-col h-full bg-[#1A1A24]/0 rounded-xl border-border/0">
-          <div className="flex items-center justify-between px-2 pb-4 pt-1 shrink-0">
-            <span className="text-[12px] font-semibold tracking-wider text-text-muted uppercase">
-              Entregados
-            </span>
-            <span className="bg-surface-2 text-text-muted px-2 py-0.5 rounded-md text-[11px] font-medium">
-              {columns.entregados.length}
-            </span>
-          </div>
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
-            {columns.entregados.map(order => (
-              <PedidoCard 
-                key={order.id} 
-                order={order} 
-                onChangeStatus={changeOrderStatus}
+                onClick={() => setSelectedOrder(order)}
                 isLoading={updateEstadoMutation.isPending && updateEstadoMutation.variables?.id === order.id}
               />
             ))}
@@ -173,6 +177,48 @@ const PedidosPage = () => {
         </div>
 
       </div>
+
+      {/* ── Historial (Inferior y colapsable) ── */}
+      <div className="bg-surface rounded-xl border border-border shrink-0 overflow-hidden">
+        <button 
+          className="w-full flex justify-between items-center px-6 py-4 hover:bg-surface-2/50 transition-colors"
+          onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+        >
+          <div className="flex items-center gap-3">
+            <h2 className="text-[15px] font-semibold text-text tracking-tight">Historial de Pedidos Finalizados</h2>
+            <span className="bg-surface-2 text-text-muted px-2 py-0.5 rounded-md text-[11px] font-medium">
+              {columns.finalizados.length}
+            </span>
+          </div>
+          {isHistoryExpanded ? <ChevronDown className="w-5 h-5 text-text-muted" /> : <ChevronRight className="w-5 h-5 text-text-muted" />}
+        </button>
+        
+        {isHistoryExpanded && (
+          <div className="p-6 border-t border-border bg-surface-2/10">
+            {columns.finalizados.length === 0 ? (
+              <p className="text-text-muted text-sm text-center">No hay pedidos finalizados (Entregados/Cancelados).</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                {columns.finalizados.map(order => (
+                  <PedidoCard 
+                    key={order.id} 
+                    order={order} 
+                    onChangeStatus={changeOrderStatus}
+                    onClick={() => setSelectedOrder(order)}
+                    isLoading={false}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <PedidoDetalleModal 
+        isOpen={selectedOrder !== null} 
+        onClose={() => setSelectedOrder(null)} 
+        pedido={selectedOrder} 
+      />
     </div>
   );
 };
@@ -183,10 +229,12 @@ const PedidosPage = () => {
 const PedidoCard = ({ 
   order, 
   onChangeStatus,
+  onClick,
   isLoading 
 }: { 
   order: Order, 
   onChangeStatus: (id: number, s: OrderStatus) => void,
+  onClick?: () => void,
   isLoading: boolean
 }) => {
   
@@ -209,7 +257,10 @@ const PedidoCard = ({
   const nombreMostrar = order.nombre_cliente || `Usuario #${order.id}`;
 
   return (
-    <div className={`bg-surface border border-border rounded-xl p-5 flex flex-col gap-4 transition-opacity duration-300 hover:border-[#3E4260] ${cardOpacity}`}>
+    <div 
+      className={`bg-surface border border-border rounded-xl p-5 flex flex-col gap-4 transition-opacity duration-300 hover:border-[#3E4260] cursor-pointer ${cardOpacity}`}
+      onClick={onClick}
+    >
       
       {/* Cabecera (Orden # y Estado) */}
       <div className="flex items-center justify-between">
@@ -221,7 +272,9 @@ const PedidoCard = ({
             {nombreMostrar}
           </span>
         </div>
-        <StatusBadge variant={getBadgeVariant()} />
+        <div onClick={(e) => { e.stopPropagation(); onClick?.(); }}>
+          <StatusBadge variant={getBadgeVariant()} />
+        </div>
       </div>
 
       {/* Lista de Items */}
@@ -250,7 +303,7 @@ const PedidoCard = ({
 
       {/* Botones de Acción (Si no está entregado ni cancelado) */}
       {!isEntregado && !isCancelado && (
-        <div className="flex gap-2 pt-1">
+        <div className="flex gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
           {order.estado_codigo === 'PENDIENTE' && (
             <>
               <Button disabled={isLoading} variant="secondary" className="flex-1 text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'CANCELADO')}>

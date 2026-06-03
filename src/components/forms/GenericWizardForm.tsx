@@ -126,7 +126,7 @@ export function GenericWizardForm<T>({
                 ) : config.type === 'select' ? (
                   <select
                     className={`w-full rounded-xl border border-border bg-surface-2 px-4 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    value={field.state.value as string | number}
+                    value={field.state.value ?? ""}
                     onChange={(e) => field.handleChange(e.target.value as any)}
                     onBlur={field.handleBlur} disabled={isDisabled}>
                     <option value="">Seleccione una opción...</option>
@@ -190,7 +190,7 @@ export function GenericWizardForm<T>({
       headerActions={headerActions} footer={wizardFooter}>
 
       {/* Progress bar */}
-      <div className="mb-6">
+      <div className={`mb-6 ${stepNames.length === 1 ? 'hidden' : ''}`}>
         <div className="flex items-center justify-between relative">
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-surface-2 rounded-full -z-10" />
           <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full -z-10 transition-all duration-300"

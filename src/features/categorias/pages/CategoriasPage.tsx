@@ -147,11 +147,18 @@ const CategoriasPage = () => {
           ) : null
         }
         onSubmit={async (values) => {
+          const payload = { ...values };
+          if ((payload.parent_id as any) === "" || payload.parent_id === null) {
+            payload.parent_id = null;
+          } else {
+            payload.parent_id = parseInt(payload.parent_id as any, 10);
+          }
+
           if (modalMode === 'edit' && selectedItem) {
-            await updateMutation.mutateAsync({ id: selectedItem.id, data: values });
+            await updateMutation.mutateAsync({ id: selectedItem.id, data: payload });
             closeModal();
           } else {
-            await createMutation.mutateAsync(values);
+            await createMutation.mutateAsync(payload);
           }
         }}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
