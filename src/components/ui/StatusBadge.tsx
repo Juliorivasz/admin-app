@@ -23,6 +23,7 @@ type StatusVariant =
   | 'removible'
   | 'principal'
   | 'pedido-pendiente'
+  | 'pedido-confirmado'
   | 'pedido-preparacion'
   | 'pedido-listo'
   | 'pedido-entregado'
@@ -100,8 +101,13 @@ const VARIANTS: Record<StatusVariant, VariantConfig> = {
     badge: 'bg-[rgba(224,122,95,0.1)] text-[#E07A5F] border-[rgba(224,122,95,0.2)]',
     dot:   'bg-[#E07A5F]',
   },
+  'pedido-confirmado': {
+    label: 'CONFIRMADO',
+    badge: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    dot:   'bg-purple-400',
+  },
   'pedido-preparacion': {
-    label: 'EN PREPARACIÓN',
+    label: 'EN PREP',
     badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     dot:   'bg-blue-400',
   },

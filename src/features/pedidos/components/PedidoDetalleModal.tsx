@@ -15,8 +15,8 @@ const PedidoDetalleModal = ({ isOpen, onClose, pedido }: PedidoDetalleModalProps
   const getBadgeVariant = (estado: string = '') => {
     switch (estado) {
       case 'PENDIENTE': return 'pedido-pendiente';
-      case 'CONFIRMADO': return 'pedido-preparacion';
-      case 'EN_PREPARACION': return 'pedido-preparacion';
+      case 'CONFIRMADO': return 'pedido-confirmado';
+      case 'EN_PREP': return 'pedido-preparacion';
       case 'LISTO': return 'pedido-listo';
       case 'ENTREGADO': return 'pedido-entregado';
       case 'CANCELADO': return 'pedido-cancelado';

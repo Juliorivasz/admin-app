@@ -1,4 +1,4 @@
-export type OrderStatus = 'PENDIENTE' | 'CONFIRMADO' | 'EN_PREPARACION' | 'LISTO' | 'ENTREGADO' | 'CANCELADO';
+export type OrderStatus = 'PENDIENTE' | 'CONFIRMADO' | 'EN_PREP' | 'LISTO' | 'ENTREGADO' | 'CANCELADO';
 
 export interface OrderItem {
   id?: number;
