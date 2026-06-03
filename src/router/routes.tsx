@@ -53,7 +53,7 @@ export const privateRoutes: AppRoute[] = [
     element: <DashboardPage />,
     withLayout: true,
     requiresAuth: true,
-    roles: ['ADMIN', 'STOCK', 'PEDIDOS'],
+    roles: ['ADMIN'],
   },
   {
     path: 'usuarios',

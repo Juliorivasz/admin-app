@@ -21,8 +21,19 @@ const LoginPage = () => {
     try {
       console.log('Iniciando petición al backend...');
       await login({ email, password });
-      console.log('Petición exitosa, navegando a / ...');
-      navigate('/');
+      console.log('Petición exitosa, determinando redirección según rol...');
+      
+      const user = useAuthStore.getState().user;
+      let targetPath = '/';
+      
+      if (user && user.roles) {
+        if (!user.roles.includes('ADMIN')) {
+          if (user.roles.includes('PEDIDOS')) targetPath = '/pedidos';
+          else if (user.roles.includes('STOCK')) targetPath = '/productos';
+        }
+      }
+      
+      navigate(targetPath);
     } catch (err: any) {
       console.error('Error capturado en el login:', err);
       if (err.message) {

@@ -27,7 +27,7 @@ const Sidebar = () => {
   const logout = useAuthStore(state => state.logout);
   
   const mainNavItems = [
-    { name: 'Dashboard',    path: '/',             icon: LayoutDashboard, roles: ['ADMIN', 'STOCK', 'PEDIDOS'] },
+    { name: 'Dashboard',    path: '/',             icon: LayoutDashboard, roles: ['ADMIN'] },
     { name: 'Pedidos',      path: '/pedidos',      icon: ClipboardList,   roles: ['ADMIN', 'PEDIDOS'] },
     { name: 'Productos',    path: '/productos',    icon: Box,             roles: ['ADMIN', 'STOCK'] },
     { name: 'Ingredientes', path: '/ingredientes', icon: UtensilsCrossed, roles: ['ADMIN', 'STOCK'] },

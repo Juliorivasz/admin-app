@@ -403,18 +403,25 @@ const PedidoCard = ({
             <span className="text-[12px] text-text-muted italic w-full text-center py-2">Solo ADMIN puede confirmar.</span>
           )}
 
+          {/* Si NO es pendiente y es ADMIN, mostrar botón Cancelar a la par del botón de acción principal */}
+          {order.estado_codigo !== 'PENDIENTE' && isAdmin && (
+            <Button disabled={isLoading} variant="secondary" className="flex-1 text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'CANCELADO')}>
+              Cancelar
+            </Button>
+          )}
+
           {order.estado_codigo === 'CONFIRMADO' && (
-            <Button disabled={isLoading} variant="warning" className="w-full text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'EN_PREP')}>
-              {isLoading ? '...' : 'Pasar a Preparación'}
+            <Button disabled={isLoading} variant="warning" className="flex-1 text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'EN_PREP')}>
+              {isLoading ? '...' : 'A Preparación'}
             </Button>
           )}
           {order.estado_codigo === 'EN_PREP' && (
-            <Button disabled={isLoading} variant="primary" className="w-full text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'LISTO')}>
+            <Button disabled={isLoading} variant="primary" className="flex-1 text-[13px] py-2 h-9" onClick={() => onChangeStatus(order.id, 'LISTO')}>
               {isLoading ? '...' : 'Listo'}
             </Button>
           )}
           {order.estado_codigo === 'LISTO' && (
-            <Button disabled={isLoading} variant="success" className="w-full text-[13px] py-2 h-9 text-green-950 font-bold" onClick={() => onChangeStatus(order.id, 'ENTREGADO')}>
+            <Button disabled={isLoading} variant="success" className="flex-1 text-[13px] py-2 h-9 text-green-950 font-bold" onClick={() => onChangeStatus(order.id, 'ENTREGADO')}>
               {isLoading ? '...' : 'Entregado'}
             </Button>
           )}

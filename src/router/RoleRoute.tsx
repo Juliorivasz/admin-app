@@ -19,9 +19,13 @@ const RoleRoute = ({ roles, children }: RoleRouteProps) => {
 
   // Si no hay roles definidos para la ruta, cualquier usuario autenticado puede acceder
   if (roles.length > 0) {
-    // Verificar si el usuario tiene al menos uno de los roles requeridos
     const hasRole = user?.roles?.some(role => roles.includes(role as UserRole));
     if (!hasRole) {
+      // Si un empleado intenta acceder al dashboard (raíz) por defecto, redirigirlo a su página principal
+      if (window.location.pathname === '/') {
+        if (user?.roles?.includes('PEDIDOS')) return <Navigate to="/pedidos" replace />;
+        if (user?.roles?.includes('STOCK')) return <Navigate to="/productos" replace />;
+      }
       return <Navigate to="/unauthorized" replace />;
     }
   }
