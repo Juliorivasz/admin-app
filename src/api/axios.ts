@@ -23,7 +23,26 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     return response.data;
   },
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+
+    // Manejo de expiración de sesión (401) y Refresh Token
+    if (error.response && error.response.status === 401 && originalRequest && !originalRequest._retry && originalRequest.url !== '/auth/refresh' && originalRequest.url !== '/auth/login') {
+      originalRequest._retry = true;
+      try {
+        // Intentar refrescar usando una instancia limpia de axios para evitar loops en los interceptores
+        await axios.post('http://localhost:8000/auth/refresh', {}, { withCredentials: true });
+        // Si tiene éxito, reintentar la solicitud original
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Si falla el refresh token, la sesión expiró por completo
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
     let errorMessage = 'Ocurrió un error inesperado';
     
     if (error.response) {
@@ -48,9 +67,6 @@ api.interceptors.response.use(
       // La petición fue hecha pero no se recibió respuesta
       errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión de red o si el servidor está encendido.';
     }
-
-    // Aquí podríamos disparar una notificación global
-    // toast.error(errorMessage);
 
     // Rechazamos con un error que incluya el status HTTP
     const customError = new Error(errorMessage) as any;
