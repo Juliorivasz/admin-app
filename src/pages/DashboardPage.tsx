@@ -1,25 +1,13 @@
 import { DollarSign, Package, ShoppingCart, TrendingUp, RotateCw } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getKpis } from '../features/dashboard/services/dashboard.service';
-import { useWebSocket } from '../hooks/useWebSocket';
 import Button from '../components/ui/Button';
 
 const DashboardPage = () => {
-  const queryClient = useQueryClient();
   const { data: kpis, isLoading, isError, refetch } = useQuery({
     queryKey: ['dashboard-kpis'],
     queryFn: getKpis,
   });
-
-  const { isConnected, lastMessage } = useWebSocket(`ws://${window.location.host}/ws-pedidos`);
-
-  useEffect(() => {
-    if (lastMessage) {
-      console.log('Real-time update received:', lastMessage.event);
-      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
-    }
-  }, [lastMessage, queryClient]);
 
   return (
     <div className="flex flex-col h-full space-y-6">
@@ -33,7 +21,6 @@ const DashboardPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} mr-2`} title={isConnected ? 'Conectado a tiempo real' : 'Desconectado'} />
           <Button variant="primary" className="px-4 py-2 text-[13px]" onClick={() => refetch()}>
             <RotateCw className="w-4 h-4" />
             Actualizar

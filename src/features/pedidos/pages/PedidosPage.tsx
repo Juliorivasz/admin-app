@@ -1,13 +1,12 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Filter, RotateCw, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { RotateCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import { getPedidos, updateEstadoPedido } from '../services/pedidoService';
-import { useWebSocket } from '../../../hooks/useWebSocket';
-import PedidoDetalleModal from '../components/PedidoDetalleModal';
 import type { Order, OrderStatus } from '../types/order';
 import { useAuthStore } from '../../auth/store/authStore';
+import PedidoDetalleModal from '../components/PedidoDetalleModal';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -25,16 +24,6 @@ const PedidosPage = () => {
   // Auth
   const user = useAuthStore(state => state.user);
   const isAdmin = user?.roles?.includes('ADMIN') || false;
-
-  // Connect to WebSocket
-  const { isConnected, lastMessage } = useWebSocket(`ws://${window.location.host}/ws-pedidos`);
-
-  useEffect(() => {
-    if (lastMessage) {
-      console.log('Real-time order update received:', lastMessage.event);
-      queryClient.invalidateQueries({ queryKey: ['pedidos'] });
-    }
-  }, [lastMessage, queryClient]);
 
   const { data: pedidosResponse, isLoading, isError, refetch } = useQuery({
     queryKey: ['pedidos'],
@@ -132,8 +121,6 @@ const PedidosPage = () => {
             )}
           </div>
           
-          <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} mr-2`} title={isConnected ? 'Conectado a tiempo real' : 'Desconectado'} />
-
           <Button variant="primary" className="px-4 py-2 text-[13px]" onClick={() => refetch()}>
             <RotateCw className="w-4 h-4" />
             Actualizar

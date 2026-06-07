@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Bell, CircleHelp, User } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useWebSocket } from '../hooks/useWebSocket';
 import Sidebar from './Sidebar';
 
 /**
@@ -17,8 +20,21 @@ import Sidebar from './Sidebar';
 const Layout = () => {
   const location = useLocation();
   
+  const queryClient = useQueryClient();
+  const { lastMessage, isConnected } = useWebSocket(`ws://${window.location.host}/ws-pedidos`);
+
+  useEffect(() => {
+    if (lastMessage) {
+      console.log('[Layout] Real-time global update received:', lastMessage.event);
+      // refetchType: 'all' fuerza a que incluso las queries inactivas (páginas no montadas) 
+      // se actualicen en segundo plano. Así al navegar a ellas, la data ya está fresca.
+      queryClient.invalidateQueries({ queryKey: ['pedidos'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'], refetchType: 'all' });
+    }
+  }, [lastMessage, queryClient]);
+
   // Generar un breadcrumb simple basado en la ruta actual
-  const pathName = location.pathname.split('/')[1] || 'Productos';
+  const pathName = location.pathname.split('/')[1] || 'Dashboard';
   const pageName = pathName.charAt(0).toUpperCase() + pathName.slice(1);
 
   return (
@@ -37,8 +53,12 @@ const Layout = () => {
 
           {/* Acciones del header */}
           <div className="flex items-center gap-4">
+            <div 
+              className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} shadow-sm`} 
+              title={isConnected ? 'Servidor de tiempo real conectado' : 'Desconectado del servidor de tiempo real'}
+            />
             <button className="text-text-muted hover:text-text transition-colors">
-              <Bell className="w-5 h-5" strokeWidth={1.8} />
+              <Bell className="w-5 h-5" />
             </button>
             <button className="text-text-muted hover:text-text transition-colors">
               <CircleHelp className="w-5 h-5" strokeWidth={1.8} />
