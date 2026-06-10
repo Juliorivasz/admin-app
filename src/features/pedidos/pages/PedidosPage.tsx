@@ -43,22 +43,23 @@ const PedidosPage = () => {
     if (Array.isArray(pedidosResponse)) list = pedidosResponse;
     else if (Array.isArray((pedidosResponse as any).data)) list = (pedidosResponse as any).data;
     
-    // Sort oldest first (ASC) so newest go to the bottom of the column
     list = list.sort((a, b) => a.id - b.id);
 
-    if (selectedDate) {
-      list = list.filter(o => o.created_at && o.created_at.startsWith(selectedDate));
-    }
     return list;
-  }, [pedidosResponse, selectedDate]);
+  }, [pedidosResponse]);
 
   const columns = useMemo(() => {
+    let finalizados = orders.filter(o => o.estado_codigo === 'ENTREGADO' || o.estado_codigo === 'CANCELADO');
+    if (selectedDate) {
+      finalizados = finalizados.filter(o => o.created_at && o.created_at.startsWith(selectedDate));
+    }
+
     return {
       entrantes: orders.filter(o => o.estado_codigo === 'PENDIENTE' || o.estado_codigo === 'CONFIRMADO'),
       preparacion: orders.filter(o => o.estado_codigo === 'EN_PREP' || o.estado_codigo === 'LISTO'),
-      finalizados: orders.filter(o => o.estado_codigo === 'ENTREGADO' || o.estado_codigo === 'CANCELADO'),
+      finalizados: finalizados,
     };
-  }, [orders]);
+  }, [orders, selectedDate]);
 
   const changeOrderStatus = (id: number, newStatus: OrderStatus) => {
     updateEstadoMutation.mutate({ id, estado_codigo: newStatus });
@@ -103,23 +104,25 @@ const PedidosPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 mr-2">
-            <span className="text-[13px] text-text-muted">Fecha:</span>
-            <input 
-              type="date" 
-              className="bg-surface-2 border border-border rounded-md px-3 py-1.5 text-[13px] text-text focus:outline-none focus:border-primary"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            />
-            {selectedDate && (
-              <button 
-                onClick={() => setSelectedDate('')}
-                className="text-[12px] text-text-muted hover:text-white"
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
+          {activeTab === 'historial' && (
+            <div className="flex items-center gap-2 mr-2">
+              <span className="text-[13px] text-text-muted">Fecha:</span>
+              <input 
+                type="date" 
+                className="bg-surface-2 border border-border rounded-md px-3 py-1.5 text-[13px] text-text focus:outline-none focus:border-primary"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
+              {selectedDate && (
+                <button 
+                  onClick={() => setSelectedDate('')}
+                  className="text-[12px] text-text-muted hover:text-white"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
+          )}
           
           <Button variant="primary" className="px-4 py-2 text-[13px]" onClick={() => refetch()}>
             <RotateCw className="w-4 h-4" />
@@ -136,7 +139,10 @@ const PedidosPage = () => {
               ? 'border-primary text-primary' 
               : 'border-transparent text-text-muted hover:text-text hover:border-border'
           }`}
-          onClick={() => setActiveTab('activos')}
+          onClick={() => {
+            setActiveTab('activos');
+            setSelectedDate(''); // Limpiar fecha al salir de historial
+          }}
         >
           Pedidos en Curso ({columns.entrantes.length + columns.preparacion.length})
         </button>

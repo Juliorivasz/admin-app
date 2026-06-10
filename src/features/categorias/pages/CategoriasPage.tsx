@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCategorias, createCategoria, updateCategoria, deleteCategoria } from '../services/categoriaService';
+import { getCategorias, createCategoria, updateCategoria } from '../services/categoriaService';
 import CategoriaTreeView from '../../../components/ui/CategoriaTreeView';
 import { Toggle } from '../../../components/ui/Toggle';
-import { ConfirmModal } from '../../../components/ui/ConfirmModal';
+import Modal from '../../../components/ui/Modal';
+import Button from '../../../components/ui/Button';
 import { GenericWizardForm, type FormFieldConfig } from '../../../components/forms/GenericWizardForm';
 import PageHeader from '../../../components/ui/PageHeader';
 import FilterBar from '../../../components/ui/FilterBar';
@@ -20,6 +21,7 @@ const CategoriasPage = () => {
   const [categoriaToDelete, setCategoriaToDelete] = useState<any>(null);
   const [searchText, setSearchText] = useState('');
   const [showInactivos, setShowInactivos] = useState(false);
+  const [errorModalMsg, setErrorModalMsg] = useState<string | null>(null);
 
   const { data: categorias, isLoading, isError } = useQuery({
     queryKey: ['categorias', searchText, showInactivos],
@@ -33,27 +35,35 @@ const CategoriasPage = () => {
 
   const filteredData = useMemo(() => {
     if (!categorias) return [];
-    return showInactivos
+    let result = showInactivos
       ? categorias.filter((c: any) => c.deleted_at !== null)
       : categorias.filter((c: any) => !c.deleted_at);
-  }, [categorias, showInactivos]);
+
+    if (searchText) {
+      const lowerSearch = searchText.toLowerCase();
+      result = result.filter((c: any) => c.nombre?.toLowerCase().includes(lowerSearch));
+    }
+    return result;
+  }, [categorias, showInactivos, searchText]);
 
   const createMutation = useMutation({
     mutationFn: createCategoria,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['categorias'] }); setIsModalOpen(false); },
+    onSuccess: () => { 
+      queryClient.invalidateQueries({ queryKey: ['categorias'] }); 
+      queryClient.invalidateQueries({ queryKey: ['categorias-all'] }); 
+      setIsModalOpen(false); 
+    },
   });
 
   const updateMutation = useMutation({
     mutationFn: updateCategoria,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categorias'] }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteCategoria,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categorias'] });
+      queryClient.invalidateQueries({ queryKey: ['categorias-all'] });
     },
   });
+
+
 
   const parentOptions = useMemo(() => {
     if (!allCategorias) return [];
@@ -138,9 +148,20 @@ const CategoriasPage = () => {
               onChange={() => {
                 if (!selectedItem.deleted_at) {
                   setCategoriaToDelete(selectedItem);
+                  closeModal();
                 } else {
-                  // Assuming re-activation is needed or handled via update if not delete
-                  setSelectedItem({ ...selectedItem, deleted_at: null });
+                  updateMutation.mutate(
+                    { id: selectedItem.id, data: { activo: true } as any },
+                    {
+                      onSuccess: () => {
+                        setSelectedItem({ ...selectedItem, deleted_at: null });
+                      },
+                      onError: (error: any) => {
+                        const msg = error.response?.data?.detail || error.message || "Error al activar";
+                        setErrorModalMsg(msg);
+                      }
+                    }
+                  );
                 }
               }}
             />
@@ -164,18 +185,55 @@ const CategoriasPage = () => {
         isSubmitting={createMutation.isPending || updateMutation.isPending}
       />
 
-      <ConfirmModal
-        isOpen={!!categoriaToDelete}
-        onClose={() => setCategoriaToDelete(null)}
-        onConfirm={() => {
-          deleteMutation.mutate(categoriaToDelete?.id);
-          setSelectedItem({ ...categoriaToDelete, deleted_at: new Date().toISOString() });
-          setCategoriaToDelete(null);
-        }}
-        title="Alerta de Baja"
-        confirmText="Sí, Desactivar"
-        message={<>¿Seguro que deseas dar de baja la categoría <strong className="text-text">{categoriaToDelete?.nombre}</strong>?</>}
-      />
+      {categoriaToDelete && (
+        <Modal isOpen={true} onClose={() => setCategoriaToDelete(null)} title="⚠️ Alerta de Baja" size="sm" footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button type="button" onClick={() => setCategoriaToDelete(null)} className="bg-surface-2 text-text hover:bg-surface border border-border">Cancelar</Button>
+            {allCategorias?.some((c: any) => c.parent_id === categoriaToDelete.id && !c.deleted_at) ? (
+              <>
+                <Button type="button" onClick={() => {
+                  updateMutation.mutate({ id: categoriaToDelete.id, data: { activo: false, estrategia_baja: 'promote' } as any });
+                  setCategoriaToDelete(null);
+                }} className="bg-warning hover:bg-warning/80 text-white border-0 text-xs px-2">Promover Hijos</Button>
+                <Button type="button" onClick={() => {
+                  updateMutation.mutate({ id: categoriaToDelete.id, data: { activo: false, estrategia_baja: 'cascade' } as any });
+                  setCategoriaToDelete(null);
+                }} className="bg-danger hover:bg-danger-hover text-white border-0 text-xs px-2">Desactivar Todo</Button>
+              </>
+            ) : (
+              <Button type="button" onClick={() => {
+                updateMutation.mutate({ id: categoriaToDelete.id, data: { activo: false } as any });
+                setCategoriaToDelete(null);
+              }} className="bg-danger hover:bg-danger-hover text-white border-0">Sí, Desactivar</Button>
+            )}
+          </div>
+        }>
+          <div className="text-text-muted">
+            <p>¿Seguro que deseas dar de baja la categoría <strong className="text-text">{categoriaToDelete.nombre}</strong>?</p>
+            {allCategorias?.some((c: any) => c.parent_id === categoriaToDelete.id && !c.deleted_at) && (
+              <p className="mt-2 text-sm">Esta categoría tiene subcategorías. ¿Qué deseas hacer con ellas?</p>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {errorModalMsg && (
+        <Modal 
+          isOpen={true} 
+          onClose={() => setErrorModalMsg(null)} 
+          title="⚠️ Error de Activación" 
+          size="sm" 
+          footer={
+            <div className="flex justify-end gap-3 w-full">
+              <Button type="button" onClick={() => setErrorModalMsg(null)} className="bg-primary text-white border-0 hover:bg-primary-hover">Entendido</Button>
+            </div>
+          }
+        >
+          <div className="text-text-muted">
+            <p>{errorModalMsg}</p>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

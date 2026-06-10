@@ -1,56 +1,62 @@
-# 🍔 Foodstore - Panel de Administración (Frontend)
+# Foodstore - Panel Admin (Frontend)
 
-Este es el repositorio del frontend para el **Módulo de Administración y Cajeros** del Parcial 2. Está construido con **React + Vite**, utilizando **TypeScript** y **Tailwind CSS**.
+Este proyecto es el panel de administración para la plataforma Foodstore. Desarrollado con React, TypeScript y Vite, permite a los administradores y empleados gestionar productos, categorías, stock y el flujo de pedidos en tiempo real.
 
-## 🎥 Demostración en Video
+## Arquitectura
 
-> **https://drive.google.com/drive/folders/1VX5V1lqaQgTj-3K96T0uXAvy79Q_gjZd?usp=drive_link**
+El proyecto sigue una arquitectura fuertemente modularizada basada en **Feature-Sliced Design (FSD)**, lo cual garantiza escalabilidad, mantenibilidad y evitar *cross-imports* problemáticos.
 
-## 🚀 Tecnologías Principales
+### Estructura de Directorios
 
-- **React 18** (UI)
-- **Vite** (Bundler)
-- **TypeScript** (Tipado estricto e interfaces)
-- **Tailwind CSS** (Estilos y diseño responsive)
-- **React Router Dom** (Navegación, Rutas protegidas y Guards)
-- **TanStack Query (React Query)** (Server State, Manejo de caché y mutaciones)
-- **Axios** (Cliente HTTP con interceptores y manejo de cookies `HttpOnly`)
+```text
+src/
+├── api/          # Configuración global de Axios e interceptores
+├── components/   # Componentes compartidos de UI (botones, modales, layouts)
+├── features/     # Módulos funcionales de la aplicación
+│   ├── auth/         # Autenticación y Login
+│   ├── categorias/   # CRUD de Categorías
+│   ├── dashboard/    # KPIs y Gráficos (Recharts)
+│   ├── ingredientes/ # Gestión de Ingredientes
+│   ├── pedidos/      # Feed en tiempo real y FSM de estados
+│   ├── productos/    # CRUD de Productos e Integración Cloudinary
+│   └── usuarios/     # Gestión de Empleados
+├── hooks/        # Hooks globales (ej. useAdminOrdersFeed)
+├── router/       # Configuración de React Router y Guardias de Rutas
+├── store/        # Repositorios de estado global (Zustand)
+└── types/        # Definiciones de TypeScript compartidas
+```
 
-## ✨ Características Principales (Parcial 2)
+## Stack Tecnológico
 
-### 1. Seguridad y Autenticación
-- Protección de rutas (`PrivateRoute`) que bloquea a usuarios no autenticados.
-- Protección por Roles (`RoleRoute`) que aplica el sistema RBAC (Ej: Un Cajero solo ve pedidos, el Admin ve todo).
-- El JWT se maneja mediante cookies seguras (`HttpOnly`) gracias a `withCredentials: true` en Axios.
+- **Framework**: React 19 + Vite
+- **Lenguaje**: TypeScript (Strict Mode)
+- **Estado Global**: Zustand (AuthStore, WsStore, ThemeStore, etc.)
+- **Data Fetching & Caché**: TanStack Query v5
+- **Enrutamiento**: React Router DOM v7
+- **Estilos**: Tailwind CSS v4
+- **Iconos**: Lucide React
+- **Gráficos**: Recharts
+- **Notificaciones**: Sonner (Toasts)
 
-### 2. Panel Kanban de Pedidos (TanStack Query)
-- Uso de `useQuery` para traer datos en tiempo real de la base de datos (eliminación de "mocks").
-- Uso de `useMutation` para que los empleados avancen los estados del pedido (`CONFIRMADO` -> `EN_PREPARACION` -> `LISTO` -> `ENTREGADO`).
-- Invalidación de caché (`queryClient.invalidateQueries`) para actualizar las columnas al instante sin recargar la página.
+## Características Principales
 
-### 3. Catálogo y Relaciones Complejas
-- Muestra los datos anidados de productos y categorías (Parcial 1 mejorado).
-- Formularios interactivos que validan campos requeridos antes del envío (integrado con los errores HTTP lanzados por Pydantic en el backend).
-- CRUD interactivo (Crear, Editar, Eliminar lógicamente).
+1. **Gestión de Pedidos en Tiempo Real**: Integración mediante WebSockets (`useAdminOrdersFeed`) con reconexión exponencial. El feed se actualiza globalmente usando `refetchType: 'all'` de TanStack Query para evitar datos obsoletos al cambiar de vista.
+2. **Dashboard de Estadísticas**: KPIs dinámicos y 4 gráficos interactivos generados con Recharts (Ventas, Ingresos, Distribución de Estados, Top Productos).
+3. **Manejo de Sesión Seguro**: Tokens JWT almacenados en cookies HttpOnly. El interceptor de Axios renueva automáticamente el Access Token (401) sin interrumpir la experiencia del usuario.
+4. **Roles y Permisos**: Guardia de rutas (`RoleRoute.tsx`) que redirecciona a empleados y administradores a sus respectivas áreas permitidas.
+5. **Máquina de Estados Finita (FSM)**: Transición controlada de los pedidos (`PENDIENTE -> EN_PREP -> LISTO -> ENTREGADO`).
 
-## 🛠️ Instalación y Uso
+## Scripts Disponibles
 
-1. Clonar el repositorio.
-2. Instalar dependencias:
-   ```bash
-   npm install
-   ```
-3. Configurar variables de entorno (Crear archivo `.env`):
-   ```env
-   VITE_API_URL=http://localhost:8000/api/v1
-   ```
-4. Ejecutar el entorno de desarrollo:
-   ```bash
-   npm run dev
-   ```
+- `npm run dev`: Inicia el servidor de desarrollo en `localhost:5173`.
+- `npm run build`: Compila la aplicación para producción (TypeScript + Vite).
+- `npm run preview`: Previsualiza la versión compilada.
 
-## 👥 Integrantes del Grupo
-- [Tu Nombre / Integrante 1]
-- [Integrante 2]
-- [Integrante 3]
-- [Integrante 4]
+## Despliegue y Variables de Entorno
+
+Crear un archivo `.env` en la raíz del frontend:
+
+```env
+VITE_API_URL=http://localhost:8000/api
+```
+*(Nota: Las credenciales de Cloudinary se manejan directamente desde el Backend por razones de seguridad).*

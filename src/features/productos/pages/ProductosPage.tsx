@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProductos, createProducto, updateProducto, deleteProducto } from '../services/productoService';
+import { getCategorias } from '../../categorias/services/categoriaService';
 import { DataTable } from '../../../components/ui/DataTable';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -8,6 +9,7 @@ import FilterBar from '../../../components/ui/FilterBar';
 import QueryStateWrapper from '../../../components/ui/QueryStateWrapper';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import StockBadge from '../../../components/ui/StockBadge';
+import { Toggle } from '../../../components/ui/Toggle';
 import ProductoFormModal from '../components/ProductoFormModal';
 import type { ColumnDef } from '@tanstack/react-table';
 
@@ -31,25 +33,34 @@ const ProductosPage = () => {
   const [modalMode, setModalMode] = useState<'create' | 'view' | 'edit'>('create');
   const [productoToToggle, setProductoToToggle] = useState<any>(null);
   const [searchText, setSearchText] = useState('');
+  const [disponibleFilter, setDisponibleFilter] = useState<'todos' | 'activos' | 'inactivos'>('todos');
+  const [stockFilter, setStockFilter] = useState<'todos' | 'agotado' | 'bajo'>('todos');
+  const [categoriaFilter, setCategoriaFilter] = useState<number | ''>('');
   const [showInactivos, setShowInactivos] = useState(false);
-  const [precioMin, setPrecioMin] = useState('');
-  const [precioMax, setPrecioMax] = useState('');
 
   // ── Queries ─────────────────────────────────────────────────────────
+  const { data: categoriasData } = useQuery({
+    queryKey: ['categorias'],
+    queryFn: () => getCategorias(),
+  });
+
   const { data: productos, isLoading, isError } = useQuery({
-    queryKey: ['productos', searchText, showInactivos],
-    queryFn: () => getProductos(searchText || undefined, undefined, showInactivos || undefined),
+    queryKey: ['productos', searchText, disponibleFilter, stockFilter, categoriaFilter, showInactivos],
+    queryFn: () => getProductos({
+      search: searchText || undefined,
+      disponible: disponibleFilter === 'activos' ? true : disponibleFilter === 'inactivos' ? false : undefined,
+      stock_status: stockFilter !== 'todos' ? stockFilter : undefined,
+      categoria_id: categoriaFilter !== '' ? categoriaFilter : undefined,
+      include_inactivos: showInactivos,
+    }),
   });
 
   const filteredData = useMemo(() => {
-    if (!productos) return [];
-    let result = showInactivos
-      ? productos.filter((p: any) => p.deleted_at !== null)
-      : productos.filter((p: any) => !p.deleted_at);
-    if (precioMin) result = result.filter((p: any) => p.price >= parseFloat(precioMin));
-    if (precioMax) result = result.filter((p: any) => p.price <= parseFloat(precioMax));
-    return result;
-  }, [productos, precioMin, precioMax, showInactivos]);
+    const data = productos || [];
+    return showInactivos
+      ? data.filter((p: any) => p.deleted_at !== null)
+      : data.filter((p: any) => !p.deleted_at);
+  }, [productos, showInactivos]);
 
   // ── Mutations ────────────────────────────────────────────────────────
   const createMutation = useMutation({
@@ -62,9 +73,7 @@ const ProductosPage = () => {
 
   const updateMutation = useMutation({
     mutationFn: updateProducto,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['productos'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['productos'] }),
   });
 
   const deleteMutation = useMutation({
@@ -164,35 +173,45 @@ const ProductosPage = () => {
         search={searchText}
         onSearchChange={setSearchText}
         placeholder="Buscar por nombre..."
-        hasActiveFilters={searchText !== '' || showInactivos || precioMin !== '' || precioMax !== ''}
-        onClear={() => { setSearchText(''); setShowInactivos(false); setPrecioMin(''); setPrecioMax(''); }}
+        hasActiveFilters={searchText !== '' || disponibleFilter !== 'todos' || stockFilter !== 'todos' || categoriaFilter !== ''}
+        onClear={() => { setSearchText(''); setDisponibleFilter('todos'); setStockFilter('todos'); setCategoriaFilter(''); }}
       >
-        {/* Filtros de Precio: $ Mín — $ Máx */}
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[13px] pointer-events-none">
-              $
-            </span>
-            <input
-              type="number"
-              placeholder="Mín"
-              value={precioMin}
-              onChange={(e) => setPrecioMin(e.target.value)}
-              className="w-20 bg-[#1D1E2C] border border-[#2A2B3D] rounded-xl text-[14px] text-text placeholder:text-text-muted/60 pl-7 pr-3 py-[9px] hover:border-text-muted/40 focus:outline-none focus:border-primary transition-colors"
-            />
-          </div>
-          <span className="text-text-muted font-light px-1">—</span>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[13px] pointer-events-none">
-              $
-            </span>
-            <input
-              type="number"
-              placeholder="Máx"
-              value={precioMax}
-              onChange={(e) => setPrecioMax(e.target.value)}
-              className="w-20 bg-[#1D1E2C] border border-[#2A2B3D] rounded-xl text-[14px] text-text placeholder:text-text-muted/60 pl-7 pr-3 py-[9px] hover:border-text-muted/40 focus:outline-none focus:border-primary transition-colors"
-            />
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Disponibilidad */}
+          <select
+            value={disponibleFilter}
+            onChange={(e) => setDisponibleFilter(e.target.value as any)}
+            className="bg-[#1D1E2C] border border-[#2A2B3D] rounded-xl text-[14px] text-text py-[9px] px-3 hover:border-text-muted/40 focus:outline-none focus:border-primary transition-colors cursor-pointer"
+          >
+            <option value="todos">Todos los Estados</option>
+            <option value="activos">Disponibles</option>
+            <option value="inactivos">Inactivos</option>
+          </select>
+
+          {/* Stock */}
+          <select
+            value={stockFilter}
+            onChange={(e) => setStockFilter(e.target.value as any)}
+            className="bg-[#1D1E2C] border border-[#2A2B3D] rounded-xl text-[14px] text-text py-[9px] px-3 hover:border-text-muted/40 focus:outline-none focus:border-primary transition-colors cursor-pointer"
+          >
+            <option value="todos">Todo el Stock</option>
+            <option value="bajo">Bajo Stock (≤5)</option>
+            <option value="agotado">Agotado (0)</option>
+          </select>
+
+          {/* Categoría */}
+          <select
+            value={categoriaFilter}
+            onChange={(e) => setCategoriaFilter(e.target.value === '' ? '' : Number(e.target.value))}
+            className="bg-[#1D1E2C] border border-[#2A2B3D] rounded-xl text-[14px] text-text py-[9px] px-3 hover:border-text-muted/40 focus:outline-none focus:border-primary transition-colors cursor-pointer min-w-[150px]"
+          >
+            <option value="">Todas las Categorías</option>
+            {categoriasData?.map((cat: any) => (
+              <option key={cat.id} value={cat.id} className="text-white">{cat.nombre}</option>
+            ))}
+          </select>
+          <div className="flex items-center ml-2">
+            <Toggle size="sm" label="Mostrar Inactivos" checked={showInactivos} onChange={setShowInactivos} />
           </div>
         </div>
       </FilterBar>
@@ -224,6 +243,24 @@ const ProductosPage = () => {
         }}
         isViewMode={modalMode === 'view'}
         onEnableEdit={() => setModalMode('edit')}
+        headerActions={
+          selectedItem && modalMode === 'view' ? (
+            <Toggle
+              size="sm"
+              label={selectedItem.deleted_at ? 'Restaurar / Inactivo' : 'Activo'}
+              checked={!selectedItem.deleted_at}
+              onChange={() => {
+                if (!selectedItem.deleted_at) {
+                  setProductoToToggle(selectedItem);
+                } else {
+                  // reactivate
+                  updateMutation.mutate({ id: selectedItem.id, data: { activo: true } as any });
+                  setSelectedItem({ ...selectedItem, deleted_at: null });
+                }
+              }}
+            />
+          ) : null
+        }
         onSubmit={handleSubmit}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
       />

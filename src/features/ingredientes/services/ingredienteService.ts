@@ -1,9 +1,10 @@
 import axiosInstance from '../../../api/axios';
 import type { Ingrediente, IngredienteCreate } from '../types/ingrediente';
 
-export const getIngredientes = async (nombre?: string): Promise<Ingrediente[]> => {
+export const getIngredientes = async (search?: string, include_inactivos?: boolean): Promise<Ingrediente[]> => {
   const params: Record<string, any> = {};
-  if (nombre) params.nombre = nombre;
+  if (search) params.search = search;
+  if (include_inactivos) params.include_inactivos = true;
   try {
     return await axiosInstance.get('/Ingredientes/', { params });
   } catch (error: any) {

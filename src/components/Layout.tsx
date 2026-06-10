@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Bell, CircleHelp, User } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useWebSocket } from '../hooks/useWebSocket';
+import { useAdminOrdersFeed } from '../hooks/useAdminOrdersFeed';
+import { useWsStore } from '../store/useWsStore';
 import Sidebar from './Sidebar';
 
 /**
@@ -21,7 +22,8 @@ const Layout = () => {
   const location = useLocation();
   
   const queryClient = useQueryClient();
-  const { lastMessage, isConnected } = useWebSocket(`ws://${window.location.host}/ws-pedidos`);
+  const { lastMessage } = useAdminOrdersFeed(`ws://${window.location.host}/ws-pedidos`);
+  const isConnected = useWsStore((state) => state.isConnected);
 
   useEffect(() => {
     if (lastMessage) {

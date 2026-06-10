@@ -17,7 +17,10 @@ export interface Categoria extends CategoriaBase {
 }
 
 export interface CategoriaCreate extends CategoriaBase {}
-export interface CategoriaUpdate extends Partial<CategoriaBase> {}
+export interface CategoriaUpdate extends Partial<CategoriaBase> {
+  activo?: boolean;
+  estrategia_baja?: 'cascade' | 'promote';
+}
 
 export interface ProductoEnCategoria {
   id: number;

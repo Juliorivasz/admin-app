@@ -1,7 +1,9 @@
 import axiosInstance from '../../../api/axios';
 
-export const getUsuarios = async () => {
-  return axiosInstance.get('/usuarios/?exclude_role=CLIENT');
+export const getUsuarios = async (include_inactivos?: boolean) => {
+  const params: any = { exclude_role: 'CLIENT' };
+  if (include_inactivos) params.include_inactivos = true;
+  return axiosInstance.get('/usuarios/', { params });
 };
 
 export const getUsuarioById = async (id: number) => {

@@ -1,13 +1,65 @@
 import { DollarSign, Package, ShoppingCart, TrendingUp, RotateCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getKpis } from '../features/dashboard/services/dashboard.service';
+import { getKpis, getSalesOverTime, getOrdersByStatus, getTopProducts } from '../features/dashboard/services/dashboard.service';
 import Button from '../components/ui/Button';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip as ChartTooltip,
+  Legend as ChartLegend,
+} from 'chart.js';
+import { Line, Bar, Pie } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  ChartTooltip,
+  ChartLegend
+);
 
 const DashboardPage = () => {
-  const { data: kpis, isLoading, isError, refetch } = useQuery({
+  const { data: kpis, isLoading: kpisLoading, isError: kpisError, refetch: refetchKpis } = useQuery({
     queryKey: ['dashboard-kpis'],
     queryFn: getKpis,
   });
+
+  const { data: salesOverTime, refetch: refetchSales } = useQuery({
+    queryKey: ['dashboard-sales-over-time'],
+    queryFn: getSalesOverTime,
+  });
+
+  const { data: ordersByStatus, refetch: refetchOrders } = useQuery({
+    queryKey: ['dashboard-orders-by-status'],
+    queryFn: getOrdersByStatus,
+  });
+
+  const { data: topProducts, refetch: refetchTopProducts } = useQuery({
+    queryKey: ['dashboard-top-products'],
+    queryFn: getTopProducts,
+  });
+
+  const handleRefetch = () => {
+    refetchKpis();
+    refetchSales();
+    refetchOrders();
+    refetchTopProducts();
+  };
+
+  const isLoading = kpisLoading;
+  const isError = kpisError;
+
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
     <div className="flex flex-col h-full space-y-6">
@@ -21,7 +73,7 @@ const DashboardPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="primary" className="px-4 py-2 text-[13px]" onClick={() => refetch()}>
+          <Button variant="primary" className="px-4 py-2 text-[13px]" onClick={handleRefetch}>
             <RotateCw className="w-4 h-4" />
             Actualizar
           </Button>
@@ -69,10 +121,137 @@ const DashboardPage = () => {
         </div>
       ) : null}
 
-      <div className="bg-surface rounded-xl border border-border p-6 flex-1 min-h-[300px] flex items-center justify-center">
-        <p className="text-text-muted text-[14px]">
-          (Aquí iría un gráfico de ventas por hora o semana)
-        </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+        {/* Gráfico 1: LineChart Ventas (Cantidad) */}
+        <div className="bg-surface rounded-xl border border-border p-6 flex flex-col gap-4 min-h-[300px]">
+          <h3 className="text-text font-medium text-[15px]">Ventas de los últimos 30 días</h3>
+          <div className="flex-1 w-full h-[250px] flex items-center justify-center">
+            {salesOverTime ? (
+              <div className="w-full h-full relative">
+                <Line 
+                  data={{
+                    labels: salesOverTime.data.map(d => d.label),
+                    datasets: [{
+                      label: 'Pedidos',
+                      data: salesOverTime.data.map(d => d.count || 0),
+                      borderColor: '#6366f1',
+                      backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                      tension: 0.3
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { display: false }, ticks: { color: '#94A3B8' } },
+                      y: { grid: { color: '#3E4260' }, ticks: { color: '#94A3B8' } }
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-text-muted text-[13px]">Cargando...</p>
+            )}
+          </div>
+        </div>
+
+        {/* Gráfico 2: BarChart Ingresos ($) */}
+        <div className="bg-surface rounded-xl border border-border p-6 flex flex-col gap-4 min-h-[300px]">
+          <h3 className="text-text font-medium text-[15px]">Ingresos de los últimos 30 días</h3>
+          <div className="flex-1 w-full h-[250px] flex items-center justify-center">
+            {salesOverTime ? (
+              <div className="w-full h-full relative">
+                <Bar 
+                  data={{
+                    labels: salesOverTime.data.map(d => d.label),
+                    datasets: [{
+                      label: 'Ingresos ($)',
+                      data: salesOverTime.data.map(d => d.value),
+                      backgroundColor: '#10b981',
+                      borderRadius: 4
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { display: false }, ticks: { color: '#94A3B8' } },
+                      y: { grid: { color: '#3E4260' }, ticks: { color: '#94A3B8' } }
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-text-muted text-[13px]">Cargando...</p>
+            )}
+          </div>
+        </div>
+
+        {/* Gráfico 3: PieChart Estados */}
+        <div className="bg-surface rounded-xl border border-border p-6 flex flex-col gap-4 min-h-[300px]">
+          <h3 className="text-text font-medium text-[15px]">Distribución por Estado</h3>
+          <div className="flex-1 w-full h-[250px] flex items-center justify-center">
+            {ordersByStatus ? (
+              <div className="w-full h-full relative flex justify-center">
+                <Pie 
+                  data={{
+                    labels: ordersByStatus.data.map(d => d.label),
+                    datasets: [{
+                      data: ordersByStatus.data.map(d => d.value),
+                      backgroundColor: COLORS,
+                      borderWidth: 0
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { position: 'right', labels: { color: '#E2E8F0' } }
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-text-muted text-[13px]">Cargando...</p>
+            )}
+          </div>
+        </div>
+
+        {/* Gráfico 4: BarChart Productos Más Vendidos */}
+        <div className="bg-surface rounded-xl border border-border p-6 flex flex-col gap-4 min-h-[300px]">
+          <h3 className="text-text font-medium text-[15px]">Top Productos</h3>
+          <div className="flex-1 w-full h-[250px] flex items-center justify-center">
+            {topProducts ? (
+              <div className="w-full h-full relative">
+                <Bar 
+                  data={{
+                    labels: topProducts.data.map(d => d.label),
+                    datasets: [{
+                      label: 'Vendidos',
+                      data: topProducts.data.map(d => d.value),
+                      backgroundColor: '#8b5cf6',
+                      borderRadius: 4
+                    }]
+                  }}
+                  options={{
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { color: '#3E4260' }, ticks: { color: '#94A3B8' } },
+                      y: { grid: { display: false }, ticks: { color: '#94A3B8' } }
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-text-muted text-[13px]">Cargando...</p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

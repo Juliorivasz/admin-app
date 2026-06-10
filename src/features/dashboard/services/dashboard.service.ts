@@ -16,5 +16,27 @@ export interface DashboardKpis {
 }
 
 export const getKpis = async (): Promise<DashboardKpis> => {
-  return axiosInstance.get('/dashboard/kpis');
+  return await axiosInstance.get('/dashboard/kpis');
+};
+
+export interface ChartDataPoint {
+  label: string;
+  value: number;
+  count?: number;
+}
+
+export interface ChartResponse {
+  data: ChartDataPoint[];
+}
+
+export const getSalesOverTime = async (): Promise<ChartResponse> => {
+  return await axiosInstance.get('/dashboard/sales-over-time');
+};
+
+export const getOrdersByStatus = async (): Promise<ChartResponse> => {
+  return await axiosInstance.get('/dashboard/orders-by-status');
+};
+
+export const getTopProducts = async (): Promise<ChartResponse> => {
+  return await axiosInstance.get('/dashboard/top-products');
 };

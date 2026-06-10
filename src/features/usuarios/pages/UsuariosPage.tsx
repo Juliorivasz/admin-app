@@ -7,6 +7,7 @@ import { GenericWizardForm, type FormFieldConfig } from '../../../components/for
 import PageHeader from '../../../components/ui/PageHeader';
 import FilterBar from '../../../components/ui/FilterBar';
 import QueryStateWrapper from '../../../components/ui/QueryStateWrapper';
+import { Toggle } from '../../../components/ui/Toggle';
 import type { ColumnDef } from '@tanstack/react-table';
 
 const UsuariosPage = () => {
@@ -16,11 +17,12 @@ const UsuariosPage = () => {
   const [modalMode, setModalMode] = useState<'create' | 'view' | 'edit'>('create');
   const [searchText, setSearchText] = useState('');
   const [rolFilter, setRolFilter] = useState('');
+  const [showInactivos, setShowInactivos] = useState(false);
 
   // ── Queries ─────────────────────────────────────────────────────────
   const { data: usuarios, isLoading, isError } = useQuery({
-    queryKey: ['usuarios'],
-    queryFn: getUsuarios,
+    queryKey: ['usuarios', showInactivos],
+    queryFn: () => getUsuarios(showInactivos),
   });
 
   const filteredData = useMemo(() => {
@@ -38,8 +40,11 @@ const UsuariosPage = () => {
     if (rolFilter) {
       data = data.filter((u: any) => u.roles?.includes(rolFilter));
     }
-    return data;
-  }, [usuarios, searchText, rolFilter]);
+    
+    return showInactivos
+      ? data.filter((u: any) => u.deleted_at !== null)
+      : data.filter((u: any) => !u.deleted_at);
+  }, [usuarios, searchText, rolFilter, showInactivos]);
 
   // ── Mutations ────────────────────────────────────────────────────────
   const createMutation = useMutation({
@@ -154,16 +159,18 @@ const UsuariosPage = () => {
         >
           <option value="">Roles: Todos</option>
           <option value="ADMIN">Administradores</option>
-          <option value="PEDIDOS">Encargado Pedidos</option>
-          <option value="STOCK">Encargado Stock</option>
+          <option value="PEDIDOS">Encargados de Pedidos</option>
+          <option value="STOCK">Cocina y Stock</option>
         </select>
+        <Toggle size="sm" label="Mostrar inactivos" checked={showInactivos} onChange={setShowInactivos} />
       </FilterBar>
 
       <QueryStateWrapper isLoading={isLoading} isError={isError} errorMsg="Error al cargar usuarios">
         <DataTable
           columns={columns}
           data={filteredData}
-          onRowClick={(row) => { setSelectedItem(row); setModalMode('view'); setIsModalOpen(true); }}
+          onRowClick={(row: any) => { setSelectedItem(row); setModalMode('view'); setIsModalOpen(true); }}
+          rowClassName={(row: any) => row.deleted_at ? 'opacity-50 grayscale' : ''}
         />
       </QueryStateWrapper>
 
@@ -177,6 +184,30 @@ const UsuariosPage = () => {
         defaultValues={getFormValues()}
         isViewMode={modalMode === 'view'}
         onEnableEdit={() => setModalMode('edit')}
+        headerActions={
+          selectedItem && modalMode === 'view' ? (
+            <Toggle
+              size="sm"
+              label={selectedItem.deleted_at ? 'Inactivo' : 'Activo'}
+              checked={!selectedItem.deleted_at}
+              onChange={() => {
+                if (!selectedItem.deleted_at) {
+                  // delete
+                  import('../services/usuarioService').then(({ updateUsuario }) => {
+                    updateUsuario({ id: selectedItem.id, data: { activo: false } as any }).then(() => {
+                      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+                    });
+                  });
+                  setSelectedItem({ ...selectedItem, deleted_at: new Date().toISOString() });
+                } else {
+                  // Reactivación
+                  updateMutation.mutate({ id: selectedItem.id, data: { activo: true } as any });
+                  setSelectedItem({ ...selectedItem, deleted_at: null });
+                }
+              }}
+            />
+          ) : null
+        }
         onSubmit={async (values) => {
           const roles = [];
           if (values.esPedidos) roles.push('PEDIDOS');

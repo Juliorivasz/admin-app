@@ -5,11 +5,27 @@ import type {
   ProductoDetalle
 } from '../types/producto';
 
-export const getProductos = async (nombre?: string, disponible?: boolean, include_inactivos?: boolean): Promise<Producto[]> => {
-  const params: any = { page: 1, page_size: 100 };
-  if (nombre) params.nombre = nombre;
-  if (disponible !== undefined) params.disponible = disponible;
-  if (include_inactivos) params.include_inactivos = true;
+export interface GetProductosParams {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  categoria_id?: number | null;
+  disponible?: boolean | null;
+  stock_status?: string | null;
+  include_inactivos?: boolean;
+}
+
+export const getProductos = async (filters?: GetProductosParams): Promise<Producto[]> => {
+  const params: any = { 
+    page: filters?.page || 1, 
+    page_size: filters?.page_size || 100 
+  };
+  
+  if (filters?.search) params.search = filters.search;
+  if (filters?.categoria_id) params.categoria_id = filters.categoria_id;
+  if (filters?.disponible !== undefined && filters?.disponible !== null) params.disponible = filters.disponible;
+  if (filters?.stock_status) params.stock_status = filters.stock_status;
+  if (filters?.include_inactivos) params.include_inactivos = true;
   try {
     const response: any = await axiosInstance.get('/productos/', { params });
     // Manejar el bug del backend donde devuelve list[PaginatedResponse] o PaginatedResponse normal
