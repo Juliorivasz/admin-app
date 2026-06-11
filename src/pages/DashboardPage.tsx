@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { DollarSign, Package, ShoppingCart, TrendingUp, RotateCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getKpis, getSalesOverTime, getOrdersByStatus, getTopProducts } from '../features/dashboard/services/dashboard.service';
@@ -29,24 +30,59 @@ ChartJS.register(
 );
 
 const DashboardPage = () => {
+  const [filterType, setFilterType] = useState<'today' | '7days' | '30days' | 'custom'>('today');
+  const [customStart, setCustomStart] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d.toISOString().split('T')[0];
+  });
+  const [customEnd, setCustomEnd] = useState<string>(() => {
+    return new Date().toISOString().split('T')[0];
+  });
+
+  const dateParams = useMemo(() => {
+    if (filterType === 'custom') {
+      const start = new Date(customStart + 'T00:00:00');
+      const end = new Date(customEnd + 'T23:59:59');
+      return {
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+      };
+    }
+
+    const now = new Date();
+    let startDate = new Date();
+    if (filterType === 'today') {
+      startDate.setHours(0, 0, 0, 0);
+    } else if (filterType === '7days') {
+      startDate.setDate(now.getDate() - 7);
+    } else if (filterType === '30days') {
+      startDate.setDate(now.getDate() - 30);
+    }
+    return {
+      startDate: startDate.toISOString(),
+      endDate: now.toISOString(),
+    };
+  }, [filterType, customStart, customEnd]);
+
   const { data: kpis, isLoading: kpisLoading, isError: kpisError, refetch: refetchKpis } = useQuery({
-    queryKey: ['dashboard-kpis'],
-    queryFn: getKpis,
+    queryKey: ['dashboard-kpis', dateParams],
+    queryFn: () => getKpis(dateParams.startDate, dateParams.endDate),
   });
 
   const { data: salesOverTime, refetch: refetchSales } = useQuery({
-    queryKey: ['dashboard-sales-over-time'],
-    queryFn: getSalesOverTime,
+    queryKey: ['dashboard-sales-over-time', dateParams],
+    queryFn: () => getSalesOverTime(dateParams.startDate, dateParams.endDate),
   });
 
   const { data: ordersByStatus, refetch: refetchOrders } = useQuery({
-    queryKey: ['dashboard-orders-by-status'],
-    queryFn: getOrdersByStatus,
+    queryKey: ['dashboard-orders-by-status', dateParams],
+    queryFn: () => getOrdersByStatus(dateParams.startDate, dateParams.endDate),
   });
 
   const { data: topProducts, refetch: refetchTopProducts } = useQuery({
-    queryKey: ['dashboard-top-products'],
-    queryFn: getTopProducts,
+    queryKey: ['dashboard-top-products', dateParams],
+    queryFn: () => getTopProducts(dateParams.startDate, dateParams.endDate),
   });
 
   const handleRefetch = () => {
@@ -73,6 +109,33 @@ const DashboardPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {filterType === 'custom' && (
+            <div className="flex items-center gap-2">
+              <input 
+                type="date" 
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="bg-bg border border-border text-text text-[13px] rounded-lg px-2 py-2 focus:outline-none focus:border-primary"
+              />
+              <span className="text-text-muted text-[13px]">-</span>
+              <input 
+                type="date" 
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="bg-bg border border-border text-text text-[13px] rounded-lg px-2 py-2 focus:outline-none focus:border-primary"
+              />
+            </div>
+          )}
+          <select 
+            value={filterType} 
+            onChange={(e) => setFilterType(e.target.value as any)}
+            className="bg-bg border border-border text-text text-[13px] rounded-lg px-3 py-2 focus:outline-none focus:border-primary cursor-pointer"
+          >
+            <option value="today">Hoy</option>
+            <option value="7days">Últimos 7 días</option>
+            <option value="30days">Últimos 30 días</option>
+            <option value="custom">Personalizado...</option>
+          </select>
           <Button variant="primary" className="px-4 py-2 text-[13px]" onClick={handleRefetch}>
             <RotateCw className="w-4 h-4" />
             Actualizar

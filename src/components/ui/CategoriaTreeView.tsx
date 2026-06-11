@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, Image as ImageIcon } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
 interface CategoriaTreeViewProps {
@@ -104,16 +104,31 @@ const CategoriaTreeView = ({ data, onRowClick }: CategoriaTreeViewProps) => {
               )}
             </div>
 
-            <div className="flex flex-col min-w-0">
-              <span className="font-normal text-[14px] text-text truncate">
-                {node.item.nombre}
-              </span>
-              {/* Descripción visible en mobile, pero en desktop se acomoda distinto si se quiere. Por ahora siempre visible si existe */}
-              {node.item.descripcion && (
-                <span className="text-xs text-text-muted truncate sm:hidden mt-0.5">
-                  {node.item.descripcion}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-md overflow-hidden bg-surface-2 border border-border flex items-center justify-center shrink-0">
+                {node.item.imagen_url ? (
+                  <img 
+                    src={node.item.imagen_url} 
+                    alt={node.item.nombre} 
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-surface flex items-center justify-center text-text-muted/30">
+                    <ImageIcon className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="font-normal text-[14px] text-text truncate">
+                  {node.item.nombre}
                 </span>
-              )}
+                {node.item.descripcion && (
+                  <span className="text-xs text-text-muted truncate sm:hidden mt-0.5">
+                    {node.item.descripcion}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
