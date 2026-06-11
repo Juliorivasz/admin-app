@@ -67,6 +67,12 @@ const RelacionesStep = ({
     onCategoriasChange(selectedCategorias.filter(cid => cid !== id));
   };
 
+  const makePrincipal = (id: number) => {
+    if (isViewMode) return;
+    const remaining = selectedCategorias.filter(cid => cid !== id);
+    onCategoriasChange([id, ...remaining]);
+  };
+
   // ── Ingredientes ─────────────────────────────────────────────
   const isIngSel = (id: number) => selectedIngredientes.some(i => i.ingrediente_id === id);
 
@@ -93,7 +99,12 @@ const RelacionesStep = ({
   // ── Filtros ──────────────────────────────────────────────────
   const filteredCats = categorias.filter(c => c.nombre.toLowerCase().includes(catSearch.toLowerCase()));
   const filteredIngs = ingredientes.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase()));
-  const selectedCatItems = filteredCats.filter(c => isCatSel(c.id));
+  
+  // Ordenar seleccionadas en base a la prioridad de selectedCategorias para conservar la principal al principio
+  const selectedCatItems = selectedCategorias
+    .map(cid => filteredCats.find(c => c.id === cid))
+    .filter(Boolean) as Categoria[];
+    
   const availableCatItems = filteredCats.filter(c => !isCatSel(c.id));
   const selectedIngItems = filteredIngs.filter(i => isIngSel(i.id));
   const availableIngItems = filteredIngs.filter(i => !isIngSel(i.id));
@@ -120,16 +131,34 @@ const RelacionesStep = ({
         {/* Seleccionadas — filas con controles */}
         {selectedCatItems.length > 0 && (
           <div className="space-y-1 mb-2">
-            {selectedCatItems.map(cat => (
+            {selectedCatItems.map((cat, idx) => (
               <div key={cat.id}
-                className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-primary/5 border border-primary/20 rounded-lg">
+                className={`flex items-center justify-between gap-2 px-2.5 py-1.5 border rounded-lg
+                  ${idx === 0 
+                    ? 'bg-primary/10 border-primary/30 shadow-[0_0_8px_rgba(108,99,255,0.15)]' 
+                    : 'bg-primary/5 border-primary/20'}`}>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="text-xs font-medium text-text truncate" title={getCategoryPath(cat.id, categorias)}>
                     {getCategoryPath(cat.id, categorias)}
                   </span>
+                  {idx === 0 && (
+                    <span className="text-[9px] font-bold bg-primary text-white px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 scale-90">
+                      ★ Principal
+                    </span>
+                  )}
                 </div>
                 {!isViewMode && (
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {idx > 0 && (
+                      <button 
+                        type="button" 
+                        onClick={() => makePrincipal(cat.id)}
+                        className="text-[10px] px-1.5 py-0.5 rounded text-primary hover:bg-primary/10 border border-primary/20 transition-all font-medium"
+                        title="Marcar como principal"
+                      >
+                        ☆ Principal
+                      </button>
+                    )}
                     <button type="button" onClick={() => removeCat(cat.id)}
                       className="text-[10px] px-1.5 py-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 border border-border transition-all"
                       title="Quitar">
@@ -141,6 +170,7 @@ const RelacionesStep = ({
             ))}
           </div>
         )}
+
 
         {/* Disponibles — chips para agregar */}
         {availableCatItems.length > 0 && (

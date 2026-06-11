@@ -19,7 +19,9 @@ import RelacionesStep from './RelacionesStep';
 import { getIngredientes } from '../../ingredientes/services/ingredienteService';
 import { getCategorias } from '../../categorias/services/categoriaService';
 import { getProducto } from '../services/productoService';
+import { uploadImage } from '../services/uploadService';
 import type { ProductoCreate, ProductoUpdate, ProductoIngredientePayload } from '../types/producto';
+
 
 interface ProductoFormModalProps {
   isOpen: boolean;
@@ -61,6 +63,13 @@ const ProductoFormModal = ({
   const [disponible, setDisponible] = useState(defaultValues?.disponible ?? true);
   const [imagenUrl, setImagenUrl] = useState(defaultValues?.imagen_url ?? '');
   const [unidadVentaId, setUnidadVentaId] = useState(String(defaultValues?.unidad_venta_id ?? (defaultValues as any)?.unidad_medida_id ?? '6'));
+
+  // Estados para subida de imagen
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [useManualUrl, setUseManualUrl] = useState(false);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+
 
   const [selectedCategorias, setSelectedCategorias] = useState<number[]>([]);
   const [selectedIngredientes, setSelectedIngredientes] = useState<ProductoIngredientePayload[]>([]);
@@ -112,12 +121,37 @@ const ProductoFormModal = ({
     setDisponible(defaultValues?.disponible ?? true);
     setImagenUrl(defaultValues?.imagen_url ?? '');
     setUnidadVentaId(String(defaultValues?.unidad_venta_id ?? (defaultValues as any)?.unidad_medida_id ?? '6'));
+    setLocalPreview(null);
+    setUploadError(null);
+    setUseManualUrl(false);
     if (!defaultValues?.id) {
       setSelectedCategorias([]);
       setSelectedIngredientes([]);
     }
     onClose();
   };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Crear URL local para vista previa instantánea
+    const objectUrl = URL.createObjectURL(file);
+    setLocalPreview(objectUrl);
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const url = await uploadImage(file);
+      setImagenUrl(url);
+    } catch (err: any) {
+      setUploadError(err.message || 'Error al subir la imagen.');
+      setLocalPreview(null); // Quitar vista previa local si falla
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   const handleSubmit = async () => {
     setSubmitError(null);
@@ -229,12 +263,92 @@ const ProductoFormModal = ({
                 placeholder="Ej: Hamburguesa Doble" disabled={isViewMode} />
             </div>
             <div className="mb-3">
-              <label className="text-xs font-semibold text-text mb-0.5 block">
-                URL de Imagen
-              </label>
-              <Input value={imagenUrl} onChange={e => setImagenUrl(e.target.value)}
-                placeholder="https://ejemplo.com/imagen.jpg" disabled={isViewMode} />
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-xs font-semibold text-text block">
+                  Imagen del Producto
+                </label>
+                {!isViewMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseManualUrl(!useManualUrl);
+                      setUploadError(null);
+                    }}
+                    className="text-[10px] text-primary hover:underline font-medium focus:outline-none"
+                  >
+                    {useManualUrl ? 'Subir archivo' : 'Ingresar URL de imagen'}
+                  </button>
+                )}
+              </div>
+
+              {useManualUrl ? (
+                <div>
+                  <Input 
+                    value={imagenUrl} 
+                    onChange={e => setImagenUrl(e.target.value)}
+                    placeholder="https://ejemplo.com/imagen.jpg" 
+                    disabled={isViewMode} 
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Vista previa o zona de carga */}
+                  {(localPreview || imagenUrl) ? (
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden border border-border bg-surface-2 group">
+                      <img 
+                        src={localPreview || imagenUrl || ''} 
+                        alt="Vista previa" 
+                        className="w-full h-full object-cover"
+                      />
+                      {uploading && (
+                        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white text-xs gap-2">
+                          <span className="animate-spin text-lg">⏳</span>
+                          <span>Comprimiendo y subiendo...</span>
+                        </div>
+                      )}
+                      {!isViewMode && !uploading && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImagenUrl('');
+                              setLocalPreview(null);
+                            }}
+                            className="bg-danger text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-danger-hover transition-colors"
+                          >
+                            Eliminar Imagen
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className={`border-2 border-dashed border-border rounded-xl p-4 text-center bg-surface-2/30 transition-colors
+                      ${isViewMode ? 'opacity-70' : 'hover:border-primary/50 cursor-pointer'}`}>
+                      <label className={`block ${isViewMode ? '' : 'cursor-pointer'}`}>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-xl">📷</span>
+                          <span className="text-xs font-semibold text-text">Seleccionar imagen</span>
+                          <span className="text-[10px] text-text-muted">Se comprimirá automáticamente</span>
+                        </div>
+                        {!isViewMode && (
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleFileChange} 
+                            className="hidden" 
+                          />
+                        )}
+                      </label>
+                    </div>
+                  )}
+
+                  {uploadError && (
+                    <p className="text-[11px] text-danger font-medium mt-1">⚠️ {uploadError}</p>
+                  )}
+                </div>
+              )}
             </div>
+
           </div>
         )}
 

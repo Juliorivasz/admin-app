@@ -9,9 +9,10 @@ export interface FormFieldConfig<T> {
   name: keyof T;
   label: string;
   description?: string;
-  type: 'text' | 'number' | 'checkbox' | 'select' | 'textarea';
+  type: 'text' | 'number' | 'checkbox' | 'select' | 'textarea' | 'image-upload';
   step: number;
   options?: { label: string; value: string | number }[];
+
   required?: boolean;
   placeholder?: string;
   min?: number;
@@ -37,6 +38,125 @@ interface GenericWizardFormProps<T> {
   onEnableEdit?: () => void;
   headerActions?: React.ReactNode;
 }
+
+interface ImageUploadFieldProps {
+  value: string;
+  onChange: (url: string) => void;
+  disabled?: boolean;
+}
+
+export function ImageUploadField({ value, onChange, disabled }: ImageUploadFieldProps) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [useManualUrl, setUseManualUrl] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    setLocalPreview(objectUrl);
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const url = await uploadImage(file);
+      onChange(url);
+    } catch (err: any) {
+      setUploadError(err.message || 'Error al subir la imagen.');
+      setLocalPreview(null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      {!disabled && (
+        <div className="flex justify-end mb-1">
+          <button
+            type="button"
+            onClick={() => {
+              setUseManualUrl(!useManualUrl);
+              setUploadError(null);
+            }}
+            className="text-[10px] text-primary hover:underline font-medium focus:outline-none"
+          >
+            {useManualUrl ? 'Subir archivo' : 'Ingresar URL de imagen'}
+          </button>
+        </div>
+      )}
+
+      {useManualUrl ? (
+        <Input 
+          value={value} 
+          onChange={e => onChange(e.target.value)}
+          placeholder="https://ejemplo.com/imagen.jpg" 
+          disabled={disabled} 
+        />
+      ) : (
+        <div className="space-y-2">
+          {(localPreview || value) ? (
+            <div className="relative w-full h-32 rounded-xl overflow-hidden border border-border bg-surface-2 group">
+              <img 
+                src={localPreview || value} 
+                alt="Vista previa" 
+                className="w-full h-full object-cover"
+              />
+              {uploading && (
+                <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white text-xs gap-2">
+                  <span className="animate-spin text-lg">⏳</span>
+                  <span>Comprimiendo y subiendo...</span>
+                </div>
+              )}
+              {!disabled && !uploading && (
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange('');
+                      setLocalPreview(null);
+                    }}
+                    className="bg-danger text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-danger-hover transition-colors"
+                  >
+                    Eliminar Imagen
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className={`border-2 border-dashed border-border rounded-xl p-4 text-center bg-surface-2/30 transition-colors
+              ${disabled ? 'opacity-70' : 'hover:border-primary/50 cursor-pointer'}`}>
+              <label className={`block ${disabled ? '' : 'cursor-pointer'}`}>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-xl">📷</span>
+                  <span className="text-xs font-semibold text-text">Seleccionar imagen</span>
+                  <span className="text-[10px] text-text-muted">Se comprimirá automáticamente</span>
+                </div>
+                {!disabled && (
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleFileChange} 
+                    className="hidden" 
+                  />
+                )}
+              </label>
+            </div>
+          )}
+
+          {uploadError && (
+            <p className="text-[11px] text-danger font-medium mt-1">⚠️ {uploadError}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+import { uploadImage } from '../../features/productos/services/uploadService';
+
 
 export function GenericWizardForm<T>({
   isOpen,
@@ -142,7 +262,14 @@ export function GenericWizardForm<T>({
                       className="rounded text-primary focus:ring-primary bg-surface-2 border-border h-5 w-5 disabled:opacity-50 disabled:cursor-not-allowed" />
                     <span className="text-sm text-text font-medium">{config.label}</span>
                   </label>
+                ) : config.type === 'image-upload' ? (
+                  <ImageUploadField
+                    value={(field.state.value as string) || ''}
+                    onChange={field.handleChange}
+                    disabled={isDisabled}
+                  />
                 ) : null}
+
 
                 {field.state.meta.errors.length > 0 && (
                   <span className="text-xs text-danger mt-1">{field.state.meta.errors.join(', ')}</span>

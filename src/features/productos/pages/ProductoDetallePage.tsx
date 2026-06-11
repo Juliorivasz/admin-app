@@ -69,10 +69,18 @@ const ProductoDetallePage = () => {
     updateMutation.mutate({ id: productoId, data: { ingredientes: ingPayload().filter(i => i !== ingredienteId) } });
   };
 
-  const handleAddCategoria = (categoria_id: number) => {
-    const categorias = [...catPayload(), categoria_id];
+  const handleAddCategoria = (categoria_id: number, es_principal: boolean) => {
+    let categorias = catPayload();
+    if (es_principal) {
+      // Poner al principio de la lista para que el backend la registre como principal
+      categorias = [categoria_id, ...categorias.filter(c => c !== categoria_id)];
+    } else {
+      // Poner al final
+      categorias = [...categorias.filter(c => c !== categoria_id), categoria_id];
+    }
     updateMutation.mutate({ id: productoId, data: { categorias } });
   };
+
 
   const handleRemoveCategoria = (categoriaId: number) => {
     updateMutation.mutate({ id: productoId, data: { categorias: catPayload().filter(c => c !== categoriaId) } });
@@ -168,9 +176,17 @@ const ProductoDetallePage = () => {
               <div className="space-y-1">
                 {producto.categorias.map((cat: any) => (
                   <RelacionItemRow key={cat.id || cat.categoria_id} onRemove={() => handleRemoveCategoria(cat.id || cat.categoria_id)} isPending={updateMutation.isPending}>
-                    <span className="font-medium text-text">{getCategoryPath(cat.categoria?.id || cat.categoria_id, todasCategorias) || cat.categoria?.nombre || cat.nombre}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-text">{getCategoryPath(cat.categoria?.id || cat.categoria_id, todasCategorias) || cat.categoria?.nombre || cat.nombre}</span>
+                      {cat.es_principal && (
+                        <span className="text-[10px] font-bold bg-primary/20 text-primary px-2 py-0.5 rounded-md border border-primary/20">
+                          Principal
+                        </span>
+                      )}
+                    </div>
                   </RelacionItemRow>
                 ))}
+
               </div>
             )}
           </div>

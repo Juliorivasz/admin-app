@@ -98,7 +98,8 @@ const CategoriasPage = () => {
   const formFields: FormFieldConfig<CategoriaCreate>[] = useMemo(() => [
     { name: 'nombre', label: 'Nombre de Categoría', type: 'text', step: 0, required: true, placeholder: 'Ej: Pizzas' },
     { name: 'descripcion', label: 'Descripción (Opcional)', type: 'textarea', step: 0, placeholder: 'Ej: Pizzas caseras a la piedra' },
-    { name: 'imagen_url', label: 'URL de Imagen (Opcional)', type: 'text', step: 0, placeholder: 'https://ejemplo.com/imagen.jpg' },
+    { name: 'imagen_url', label: 'Imagen de Categoría (Opcional)', type: 'image-upload', step: 0 },
+
     { name: 'parent_id' as any, label: 'Categoría Padre (Opcional)', type: 'select', step: 0, options: parentOptions },
   ], [parentOptions]);
 
