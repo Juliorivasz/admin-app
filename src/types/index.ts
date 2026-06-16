@@ -24,7 +24,7 @@ export * from './common';
  * sin ningún cambio
  *
  * Estructura:
- *   common.ts            → tipos utilitarios (PaginatedResponse)
+ *   common.ts            → tipos utilitarios (PaginatedResponse
  *   categoria.ts         → Categoria, CategoriaCreate, CategoriaUpdate...
  *   ingrediente.ts       → Ingrediente, IngredienteCreate, IngredienteUpdate...
  *   productoCategoria.ts → ProductoCategoria, ProductoCategoriaCreate
