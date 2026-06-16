@@ -23,7 +23,7 @@ export * from './common';
  * El código existente puede seguir importando desde '../ty
  * sin ningún cam
  *
- * Estructura:
+ * Estructura
  *   common.ts            → tipos utilitarios (PaginatedResponse
  *   categoria.ts         → Categoria, CategoriaCreate, CategoriaUpdate...
  *   ingrediente.ts       → Ingrediente, IngredienteCreate, IngredienteUpdate...
