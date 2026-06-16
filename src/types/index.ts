@@ -21,7 +21,7 @@ export * from './common';
  *
  * Re-exporta todo desde los archivos individu
  * El código existente puede seguir importando des
- * sin ningún ca
+ * sin ningún c
 
  * Estructura
  *   common.ts            → tipos utilitarios (PaginatedResponse
