@@ -19,7 +19,7 @@ export * from './common';
 /**
  * types/index.ts  —  Barrel de tipos
  *
- * Re-exporta todo desde los archivos individual
+ * Re-exporta todo desde los archivos individua
  * El código existente puede seguir importando desde '.
  * sin ningún cam
 
