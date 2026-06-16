@@ -20,7 +20,7 @@ export * from './common';
  * types/index.ts  —  Barrel de tipos
  *
  * Re-exporta todo desde los archivos individuales
- * El código existente puede seguir importando desde '../type
+ * El código existente puede seguir importando desde '../typ
  * sin ningún cambio
  *
  * Estructura:
