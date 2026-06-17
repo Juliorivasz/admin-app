@@ -1,6 +1,6 @@
 # Foodstore - Panel Admin (Frontend)
 
-Video trabajo Integrador:
+Video trabajo Integrador Final:
 
 https://drive.google.com/file/d/1WWHz56UHx-c8zXCPJy8df2C2pilhEvHS/view?usp=sharing
 
