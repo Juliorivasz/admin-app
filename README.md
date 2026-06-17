@@ -1,5 +1,9 @@
 # Foodstore - Panel Admin (Frontend)
 
+Video trabajo Integrador:
+
+https://drive.google.com/file/d/1WWHz56UHx-c8zXCPJy8df2C2pilhEvHS/view?usp=sharing
+
 Este proyecto es el panel de administración para la plataforma Foodstore. Desarrollado con React, TypeScript y Vite, permite a los administradores y empleados gestionar productos, categorías, stock y el flujo de pedidos en tiempo real.
 
 ## Arquitectura
