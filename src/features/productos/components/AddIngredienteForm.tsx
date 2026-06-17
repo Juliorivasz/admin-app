@@ -7,7 +7,7 @@ interface AddIngredienteFormProps {
   todosIngredientes: Ingrediente[];
   ingredientesActuales: IngredienteDetalle[];
   isPending: boolean;
-  onSubmit: (ingrediente_id: number, es_removible: boolean) => void;
+  onSubmit: (ingrediente_id: number) => void;
   onCancel: () => void;
 }
 
@@ -19,7 +19,6 @@ const AddIngredienteForm = ({
   onCancel,
 }: AddIngredienteFormProps) => {
   const [ingredienteId, setIngredienteId] = useState(0);
-  const [esRemovible, setEsRemovible] = useState(false);
 
   const disponibles = todosIngredientes.filter(
     (i) => !ingredientesActuales.find((pi) => pi.ingrediente_id === i.id)
@@ -28,7 +27,7 @@ const AddIngredienteForm = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (ingredienteId === 0) return;
-    onSubmit(ingredienteId, esRemovible);
+    onSubmit(ingredienteId);
   };
 
   return (
@@ -50,15 +49,7 @@ const AddIngredienteForm = ({
         </select>
       </div>
 
-      <label className="flex items-center gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={esRemovible}
-          onChange={(e) => setEsRemovible(e.target.checked)}
-          className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20"
-        />
-        <span className="text-sm text-text">El cliente puede quitar este ingrediente al pedir</span>
-      </label>
+
 
       <div className="flex justify-end gap-3 mt-8">
         <Button type="button" variant="ghost" onClick={onCancel}>Cancelar</Button>
